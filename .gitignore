@@ -1,0 +1,10 @@
+
+/BobbyTables/obj
+/BobbyTables/bin
+/BobbyTables.Net45/obj
+/BobbyTables.Net45/bin
+/BobbyTables.Portable/obj
+/BobbyTables.Portable/bin
+/BobbyTables.Tests/obj
+/BobbyTables.Tests/bin
+*.suo
