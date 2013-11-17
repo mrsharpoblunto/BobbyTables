@@ -8,3 +8,5 @@
 /BobbyTables.Tests/obj
 /BobbyTables.Tests/bin
 *.suo
+/BobbyTables.net40/bin
+/BobbyTables.net40/obj

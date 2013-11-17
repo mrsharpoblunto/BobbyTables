@@ -4,7 +4,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 using Newtonsoft.Json.Linq;
-#if NET45 || PORTABLE
+#if NET45 || NET40 || PORTABLE
 using System.Threading.Tasks;
 #endif
 
@@ -32,8 +32,8 @@ namespace BobbyTables
 #if !PORTABLE
 		ApiResponse GetResponse();
 #endif
-#if NET45 || PORTABLE
-				Task<ApiResponse> GetResponseAsync();
+#if NET45 || NET40 || PORTABLE
+		Task<ApiResponse> GetResponseAsync();
 #endif
 		void GetResponseAsync(Action<ApiResponse> completed);
 	}
@@ -130,7 +130,7 @@ namespace BobbyTables
 		}
 #endif
 
-#if NET45 || PORTABLE
+#if NET45 || NET40 || PORTABLE
 		public async Task<ApiResponse> GetResponseAsync()
 		{
 			ApiResponse result = new ApiResponse();

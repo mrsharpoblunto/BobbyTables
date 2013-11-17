@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-#if NET45 || PORTABLE
+#if NET45 || NET40 || PORTABLE
 using System.Threading.Tasks;
 #endif
 
@@ -133,7 +133,7 @@ namespace BobbyTables
 			}
 		}
 
-#if NET45 || PORTABLE
+#if NET45 || NET40 || PORTABLE
 		/// <summary>
 		/// Pull all pending deltas asynchronously (or get a new snapshot if this database hasn't been loaded before) and apply them.
 		/// Will throw a DatastoreException if this method is called when any local changes are pending
@@ -327,7 +327,7 @@ namespace BobbyTables
 			}
 		}
 
-#if NET45 || PORTABLE
+#if NET45 || NET40 || PORTABLE
 		/// <summary>
 		/// Wait for changes to this datastore from the server and apply them when(if) they arrive.
 		/// This method will throw a DatastoreException if any local changes are pending
@@ -424,7 +424,7 @@ namespace BobbyTables
 			return false;
 		}
 
-#if NET45 || PORTABLE
+#if NET45 || NET40 || PORTABLE
 		/// <summary>
 		/// Push all pending changes to dropbox and apply them to the local datastore copy if the commit succeeds
 		/// </summary>

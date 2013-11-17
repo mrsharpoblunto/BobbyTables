@@ -7,7 +7,7 @@ using System.Security.Cryptography;
 #endif
 using System.Text;
 using System.Text.RegularExpressions;
-#if NET45 || PORTABLE
+#if NET45 || NET40 || PORTABLE
 using System.Threading.Tasks;
 #endif
 using Newtonsoft.Json;
@@ -36,7 +36,7 @@ namespace BobbyTables
 			_keyRegex = new Regex("[-_A-Za-z0-9]{32,1000}");
 		}
 
-#if NET45 || PORTABLE
+#if NET45 || NET40 || PORTABLE
 		/// <summary>
 		/// Retrieve a datastore object from dropbox asynchronously
 		/// </summary>
@@ -143,7 +143,7 @@ namespace BobbyTables
 			return store;
 		}
 
-#if NET45 || PORTABLE
+#if NET45 || NET40 || PORTABLE
 		/// <summary>
 		/// List all dropbox datastores asynchronously
 		/// </summary>
@@ -250,7 +250,7 @@ namespace BobbyTables
 			}
 		}
 
-#if NET45 || PORTABLE
+#if NET45 || NET40 || PORTABLE
 		/// <summary>
 		/// Wait asynchronously for up to a minute while checking for changes to the datastore list.
 		/// </summary>
@@ -320,7 +320,7 @@ namespace BobbyTables
 			return false;
 		}
 
-#if NET45 || PORTABLE
+#if NET45 || NET40 || PORTABLE
 		/// <summary>
 		/// Wait for up to a minute asynchronously while checking for changes to any datastore. The list of datastores
 		/// is defined by internally calling the ListAsync() method
@@ -422,7 +422,7 @@ namespace BobbyTables
 			return changed.Count > 0;
 		}
 
-#if NET45 || PORTABLE
+#if NET45 || NET40 || PORTABLE
 		public async Task<Datastore> GetOrCreateAsync(string id, DatastoreQueryOptions options = DatastoreQueryOptions.UseCached)
 		{
 			Datastore store;
@@ -578,7 +578,7 @@ namespace BobbyTables
 		}
 #endif
 
-#if NET45
+#if NET45 || NET40
 		public async Task<KeyValuePair<string,Datastore>> CreateAsync(string key)
 		{
 			string id;
@@ -605,7 +605,7 @@ namespace BobbyTables
 			return store;
 		}
 
-#if NET45 || PORTABLE
+#if NET45 || NET40 || PORTABLE
 		public async Task<bool> DeleteAsync(Datastore datastore)
 		{
 			IApiRequest request = DeleteRequest(datastore);

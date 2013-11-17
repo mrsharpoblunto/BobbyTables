@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-#if NET45 || PORTABLE
+#if NET45 || NET40 || PORTABLE
 using System.Threading.Tasks;
 #endif
 
@@ -22,7 +22,7 @@ namespace BobbyTables
 			_retries = retries;
 		}
 
-#if NET45 || PORTABLE
+#if NET45 || NET40 || PORTABLE
 		/// <summary>
 		/// Attempts to push all actions in the transaction to dropbox asynchronously
 		/// </summary>
