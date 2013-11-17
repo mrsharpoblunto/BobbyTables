@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata>
+		<id>BobbyTables</id>
+		<title>BobbyTables</title>
+		<version>1.0.0</version>
+		<authors>Glenn Conner</authors>
+		<owners>Glenn Conner</owners>
+		<licenseUrl>https://www.github.com/mrsharpoblunto/BobbyTables/LICENSE.txt</licenseUrl>
+		<projectUrl>https://www.github.com/mrsharpoblunto/BobbyTables</projectUrl>
+		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<description>An ORM library for dropbox's datastore API</description>
+		<releaseNotes />
+		<copyright />
+		<language>en-US</language>
+		<tags>dropbox</tags>
+		<dependencies>
+			<group>
+				<dependency id="Newtonsoft.Json" version="5.0.8" />
+			</group>
+			<group targetFramework="portable-net40+sl4+wp71+win8">
+				<dependency id="Microsoft.Bcl.Async" version="1.0.165" />
+			</group>
+		</dependencies>
+	</metadata>
+	<files>
+		<file src="BobbyTables\bin\Release\BobbyTables.dll" target="lib\net20" />
+		<file src="BobbyTables.Net45\bin\Release\BobbyTables.dll" target="lib\net45" />
+		<file src="BobbyTables.Portable\bin\Release\BobbyTables.dll" target="lib\portable-net40+sl4+wp71+win8" />
+	</files>
+</package>
