@@ -75,7 +75,7 @@ namespace BobbyTables.Tests
 		[SetUp]
 		public void Setup()
 		{
-			Manager = new DatastoreManager("ec-VCy--knkAAAAAAAAAAZmzx_aU06z8vF-aTQlfLoKim9xh0JT0sXsFFYkZhRSo");
+			Manager = new DatastoreManager("abcd");
 
 			var factory = new Mock<IApiRequestFactory>();
 			ApiRequestFactory.Current = factory.Object;
