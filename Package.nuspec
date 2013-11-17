@@ -6,7 +6,7 @@
 		<version>1.0.0</version>
 		<authors>Glenn Conner</authors>
 		<owners>Glenn Conner</owners>
-		<licenseUrl>https://www.github.com/mrsharpoblunto/BobbyTables/LICENSE.txt</licenseUrl>
+		<licenseUrl>https://raw.github.com/mrsharpoblunto/BobbyTables/master/LICENSE.txt</licenseUrl>
 		<projectUrl>https://www.github.com/mrsharpoblunto/BobbyTables</projectUrl>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<description>An ORM library for dropbox's datastore API</description>
