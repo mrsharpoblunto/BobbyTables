@@ -7,7 +7,7 @@ BobbyTables is a .Net ORM library for the Dropbox datastore API. It handles seri
 
 #### DatastoreManager
 ---------------------
-DatastoreManager Is used to list/add/remove datastore objects. To create a DatastoreManager, you will need a Dropbox OAuth 2.0 bearer token (You can get this by completing an OAuth 2.0 handshake - see https://www.dropbox.com/developers/core/docs#oa2-authorize for more details)
+The DatastoreManager object is used to list/add/remove datastore objects. To create a DatastoreManager, you will need a Dropbox OAuth 2.0 bearer token (You can get this by completing an OAuth 2.0 handshake - see https://www.dropbox.com/developers/core/docs#oa2-authorize for more details)
 
 ```c#
 var manager = new DatastoreManager("oauth_token");
