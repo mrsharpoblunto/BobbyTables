@@ -114,6 +114,7 @@
   <span class="c1">// Oh no! a conflict occurred due to another user submitting a change concurrently.</span>
   <span class="c1">// In this case we should revert our local changes, Pull in the latest changes and</span>
   <span class="c1">// try again. NOTE: The Transaction feature can help make handling conflicts easier.</span>
+  <span class="n">datastore</span><span class="p">.</span><span class="n">Revert</span><span class="p">();</span>
 <span class="p">}</span>
 </pre></div>
 
