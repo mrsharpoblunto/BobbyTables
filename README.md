@@ -1,7 +1,7 @@
 BobbyTables
 ===========
 
-BobbyTables is a .Net ORM library for Dropbox's datastore API. It handles serializing and deserializing objects to and from the remote Dropbox datastore as well as handling pushing/pulling updates. BobbyTables supports .Net versions 2+, Silverlight 4+, Windows Phone 7.5+, and Windows store applications.
+BobbyTables is a .Net ORM library for the Dropbox datastore API. It handles serializing and deserializing objects to and from the remote Dropbox datastore as well as handling pushing/pulling updates. BobbyTables supports .Net versions 2+, Silverlight 4+, Windows Phone 7.5+, and Windows store applications.
 
 ### API & Usage
 
