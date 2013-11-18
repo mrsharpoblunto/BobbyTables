@@ -883,6 +883,10 @@ namespace BobbyTables
 		#endregion
 	}
 
+	/// <summary>
+	/// A table of objects indexed by a string id
+	/// </summary>
+	/// <typeparam name="T">The type of objects stored in this table</typeparam>
 	public class Table<T> : IEnumerable<T> 
 		where T : class, new()
 	{
@@ -955,7 +959,6 @@ namespace BobbyTables
 		/// contain primitive types or lists of primitive types in order to be serialized successfully
 		/// </summary>
 		/// <param name="update">The object to update</param>
-		/// <param name="id">The row id which the object should update</param>
 		/// <returns>True if the object is updated, False if a row with this id does not exist</returns>
 		public bool Update(T update)
 		{
@@ -976,7 +979,6 @@ namespace BobbyTables
 		/// Get a row from the table and convert it into the specified object type. Will fail
 		/// if the object cannot be created from the supplied row data
 		/// </summary>
-		/// <typeparam name="T">The type to convert the row into</typeparam>
 		/// <param name="id">The row id where the data should be retrieved from</param>
 		/// <returns>The constructed row object</returns>
 		public T Get(string id)
@@ -986,6 +988,10 @@ namespace BobbyTables
 
 		#region IEnumerable<T> Members
 
+		/// <summary>
+		/// Gets an enumerator containing all the objects in this table
+		/// </summary>
+		/// <returns></returns>
 		public IEnumerator<T> GetEnumerator()
 		{
 			return _table.GetAll<T>().GetEnumerator();

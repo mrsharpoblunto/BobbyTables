@@ -31,6 +31,7 @@
     <DefineConstants>TRACE;PORTABLE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Release\BobbyTables.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\BobbyTables\ApiRequest.cs">

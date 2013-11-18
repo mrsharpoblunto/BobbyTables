@@ -15,20 +15,40 @@ using Newtonsoft.Json.Linq;
 
 namespace BobbyTables
 {
+	/// <summary>
+	/// Used to define the options when querying a datastore
+	/// </summary>
 	public enum DatastoreQueryOptions
 	{
+		/// <summary>
+		/// Use a locally cached result if available (if no local result is available, will fetch from Dropbox)
+		/// </summary>
 		UseCached,
+
+		/// <summary>
+		/// Fetch new results from Dropbox
+		/// </summary>
 		ForceRefresh
 	}
 
+	/// <summary>
+	/// Manages listing, retrieving, adding and removing datastores from dropbox
+	/// </summary>
 	public class DatastoreManager
 	{
+		/// <summary>
+		/// The OAuth token used to authenticate with Dropbox
+		/// </summary>
 		public string ApiToken { get; private set; }
 
 		private Dictionary<string, Datastore> _datastores;
 		private string _token;
 		private Regex _keyRegex;
 
+		/// <summary>
+		/// Construct a new Datastore manager and use the supplied apiToken for all Dropbox API calls
+		/// </summary>
+		/// <param name="apiToken">The OAuth token used to authenticate with Dropbox</param>
 		public DatastoreManager(string apiToken)
 		{
 			ApiToken = apiToken;
@@ -61,6 +81,8 @@ namespace BobbyTables
 		/// </summary>
 		/// <param name="id">The id of the datastore</param>
 		/// <param name="options">Whether to retrieve a locally cached version, or to recheck with dropbox</param>
+		/// <param name="success">Callback if the method is successful</param>
+		/// <param name="failure">Callback if the method fails</param>
 		/// <returns></returns>
 		public void GetAsync(string id, Action<Datastore> success, Action<Exception> failure, DatastoreQueryOptions options = DatastoreQueryOptions.UseCached)
 		{
@@ -148,7 +170,7 @@ namespace BobbyTables
 		/// List all dropbox datastores asynchronously
 		/// </summary>
 		/// <param name="options">Whether to retrieve a locally cached version, or to recheck with dropbox</param>
-		/// <returns></returns>
+		/// <returns>A list of all Dropbox datastores</returns>
 		public async Task<IEnumerable<Datastore>> ListAsync(DatastoreQueryOptions options = DatastoreQueryOptions.UseCached)
 		{
 			if (string.IsNullOrEmpty(_token) || options == DatastoreQueryOptions.ForceRefresh)
@@ -165,6 +187,8 @@ namespace BobbyTables
 		/// List all dropbox datastores asynchronously
 		/// </summary>
 		/// <param name="options">Whether to retrieve a locally cached version, or to recheck with dropbox</param>
+		/// <param name="success">Callback if the method is successful</param>
+		/// <param name="failure">Callback if the method fails</param>
 		/// <returns></returns>
 		public void ListAsync(Action<IEnumerable<Datastore>> success,Action<Exception> failure,DatastoreQueryOptions options = DatastoreQueryOptions.UseCached)
 		{
@@ -191,6 +215,11 @@ namespace BobbyTables
 		}
 
 #if !PORTABLE
+		/// <summary>
+		/// List all dropbox datastores
+		/// </summary>
+		/// <param name="options">Whether to retrieve a locally cached version, or to recheck with dropbox</param>
+		/// <returns>A list of all Dropbox datastores</returns>
 		public IEnumerable<Datastore> List(DatastoreQueryOptions options = DatastoreQueryOptions.UseCached)
 		{
 			if (string.IsNullOrEmpty(_token) || options == DatastoreQueryOptions.ForceRefresh)
@@ -266,6 +295,8 @@ namespace BobbyTables
 		/// <summary>
 		/// Wait asynchronously for up to a minute while checking for changes to the datastore list.
 		/// </summary>
+		/// <param name="success">Callback if the method is successful</param>
+		/// <param name="failure">Callback if the method fails</param>
 		/// <returns>If a change occurs during this time, returns True</returns>
 		public void AwaitListChangesAsync(Action<bool> success,Action<Exception> failure)
 		{
@@ -323,7 +354,7 @@ namespace BobbyTables
 #if NET45 || NET40 || PORTABLE
 		/// <summary>
 		/// Wait for up to a minute asynchronously while checking for changes to any datastore. The list of datastores
-		/// is defined by internally calling the ListAsync() method
+		/// is defined by internally calling the <see cref="ListAsync(DatastoreQueryOptions)" /> method
 		/// </summary>
 		/// <param name="changed">Adds every datastore which had a change during the waiting time</param>
 		/// <returns>True if any changes were detected</returns>
@@ -340,10 +371,10 @@ namespace BobbyTables
 
 		/// <summary>
 		/// Wait for up to a minute asynchronously while checking for changes to any datastore. The list of datastores
-		/// is defined by internally calling the ListAsync() method
+		/// is defined by internally calling the <see cref="ListAsync(Action&lt;IEnumerable&lt;Datastore&gt;&gt;, Action&lt;Exception&gt;, DatastoreQueryOptions)" /> method
 		/// </summary>
-		/// <param name="changed">Adds every datastore which had a change during the waiting time</param>
-		/// <returns>True if any changes were detected</returns>
+		/// <param name="success">Callback if the method is successful</param>
+		/// <param name="failure">Callback if the method fails</param>
 		public void AwaitDatastoreChangesAsync(Action<List<Datastore>> success,Action<Exception> failure)
 		{
 			ListAsync(list =>
@@ -371,7 +402,7 @@ namespace BobbyTables
 #if !PORTABLE
 		/// <summary>
 		/// Wait for up to a minute while checking for changes to any datastore. The list of datastores
-		/// is defined by internally calling the List() method
+		/// is defined by internally calling the <see cref="List" /> method
 		/// </summary>
 		/// <param name="changed">Adds every datastore which had a change during the waiting time</param>
 		/// <returns>True if any changes were detected</returns>
@@ -423,6 +454,12 @@ namespace BobbyTables
 		}
 
 #if NET45 || NET40 || PORTABLE
+		/// <summary>
+		/// Gets a datastore asynchronously if it already exists, otherwise it is created
+		/// </summary>
+		/// <param name="id">The Dropbox id of the datastore</param>
+		/// <param name="options">Whether to retrieve a locally cached version, or to recheck with dropbox</param>
+		/// <returns>The existing or newly created datastore</returns>
 		public async Task<Datastore> GetOrCreateAsync(string id, DatastoreQueryOptions options = DatastoreQueryOptions.UseCached)
 		{
 			Datastore store;
@@ -435,7 +472,13 @@ namespace BobbyTables
 			return store;
 		}
 #endif
-
+		/// <summary>
+		/// Gets a datastore asynchronously if it already exists, otherwise it is created
+		/// </summary>
+		/// <param name="id">The Dropbox id of the datastore</param>
+		/// <param name="success">Callback if the method is successful</param>
+		/// <param name="failure">Callback if the method fails</param>
+		/// <param name="options">Whether to retrieve a locally cached version, or to recheck with dropbox</param>
 		public void GetOrCreateAsync(string id, Action<Datastore> success,Action<Exception> failure,DatastoreQueryOptions options = DatastoreQueryOptions.UseCached)
 		{
 			Datastore store;
@@ -462,6 +505,12 @@ namespace BobbyTables
 		}
 
 #if !PORTABLE
+		/// <summary>
+		/// Gets a datastore if it already exists, otherwise it is created
+		/// </summary>
+		/// <param name="id">The Dropbox id of the datastore</param>
+		/// <param name="options">Whether to retrieve a locally cached version, or to recheck with dropbox</param>
+		/// <returns>The existing or newly created datastore</returns>
 		public Datastore GetOrCreate(string id, DatastoreQueryOptions options = DatastoreQueryOptions.UseCached)
 		{
 			Datastore store;
@@ -503,6 +552,12 @@ namespace BobbyTables
 		}
 
 #if PORTABLE
+		/// <summary>
+		/// Creates a new globally unique datastore
+		/// </summary>
+		/// <param name="key">Used to generate a hash that will comprise the created datastores dropbox id</param>
+		/// <param name="id">A SHA256 hash of the key (see https://www.dropbox.com/developers/datastore/docs/http#create_datastore for details on how to generate the id from a key)</param>
+		/// <returns>The datastore created</returns>
 		public async Task<Datastore> Create(string key,string id)
 		{
 			if (!_keyRegex.IsMatch(key))
@@ -523,6 +578,11 @@ namespace BobbyTables
 			return CreateResponse(key, id, response);
 		}
 #else
+		/// <summary>
+		/// Creates a new globally unique datastore
+		/// </summary>
+		/// <param name="key">Used to generate a hash that will comprise the created datastores dropbox id</param>
+		/// <returns>A Tuple containing the id of the created datastore, and the datastore itself</returns>
 		public KeyValuePair<string,Datastore> Create(string key)
 		{
 			string id;
@@ -554,6 +614,12 @@ namespace BobbyTables
 			return request;
 		}
 
+		/// <summary>
+		/// Creates a new globally unique datastore asynchronously
+		/// </summary>
+		/// <param name="key">Used to generate a hash that will comprise the created datastores dropbox id</param>
+		/// <param name="success">Callback if the method is successful</param>
+		/// <param name="failure">Callback if the method fails</param>
 		public void CreateAsync(string key,Action<KeyValuePair<string,Datastore>> success,Action<Exception> failure)
 		{
 			string id;
@@ -579,6 +645,11 @@ namespace BobbyTables
 #endif
 
 #if NET45 || NET40
+		/// <summary>
+		/// Creates a new globally unique datastore asynchronously
+		/// </summary>
+		/// <param name="key">Used to generate a hash that will comprise the created datastores dropbox id</param>
+		/// <returns>A Tuple containing the id of the created datastore, and the datastore itself</returns>
 		public async Task<KeyValuePair<string,Datastore>> CreateAsync(string key)
 		{
 			string id;
@@ -606,6 +677,11 @@ namespace BobbyTables
 		}
 
 #if NET45 || NET40 || PORTABLE
+		/// <summary>
+		/// Delete a datastore and all its tables and data asynchronously
+		/// </summary>
+		/// <param name="datastore">The datastore to delete</param>
+		/// <returns>True if the deletion succeeds</returns>
 		public async Task<bool> DeleteAsync(Datastore datastore)
 		{
 			IApiRequest request = DeleteRequest(datastore);
@@ -613,7 +689,12 @@ namespace BobbyTables
 			return DeleteResponse(datastore, response);
 		}
 #endif
-
+		/// <summary>
+		/// Delete a datastore and all its tables and data asynchronously
+		/// </summary>
+		/// <param name="datastore">The datastore to delete</param>
+		/// <param name="success">Callback if the method is successful</param>
+		/// <param name="failure">Callback if the method fails</param>
 		public void DeleteAsync(Datastore datastore, Action<bool> success,Action<Exception> failure)
 		{
 			IApiRequest request = DeleteRequest(datastore);
@@ -631,6 +712,11 @@ namespace BobbyTables
 		}
 
 #if !PORTABLE
+		/// <summary>
+		/// Delete a datastore and all its tables and data
+		/// </summary>
+		/// <param name="datastore">The datastore to delete</param>
+		/// <returns>True if the deletion succeeds</returns>
 		public bool Delete(Datastore datastore)
 		{
 			IApiRequest request = DeleteRequest(datastore);
@@ -666,8 +752,8 @@ namespace BobbyTables
 		/// Loads a datastore from a previous snapshot. If this datastore manager already has a datastore with
 		/// the same Id, loading a snapshot will replace the existing datastore state
 		/// </summary>
-		/// <param name="snapshot">A stream containing the snapshot data</param>
-		/// <returns></returns>
+		/// <param name="reader">A reader containing the snapshot data</param>
+		/// <returns>The loaded datastore</returns>
 		public Datastore Load(TextReader reader)
 		{
 			Datastore store = new Datastore(this, reader);

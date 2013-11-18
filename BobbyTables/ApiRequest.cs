@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace BobbyTables
 {
-	public class ApiResponse
+	internal class ApiResponse
 	{
 		internal ApiResponse() 
 		{ 
@@ -26,7 +26,7 @@ namespace BobbyTables
 		public JObject Body { get; set; }
 	}
 
-	public interface IApiRequest
+	internal interface IApiRequest
 	{
 		IApiRequest AddParam(string name, string value);
 #if !PORTABLE
@@ -38,7 +38,7 @@ namespace BobbyTables
 		void GetResponseAsync(Action<ApiResponse> completed);
 	}
 
-	public interface IApiRequestFactory
+	internal interface IApiRequestFactory
 	{
 		IApiRequest CreateRequest(string method,string url,string apiToken);
 	}

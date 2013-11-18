@@ -3,7 +3,7 @@
 	<metadata>
 		<id>BobbyTables</id>
 		<title>BobbyTables</title>
-		<version>1.1.0</version>
+		<version>1.1.1</version>
 		<authors>Glenn Conner</authors>
 		<owners>Glenn Conner</owners>
 		<licenseUrl>https://raw.github.com/mrsharpoblunto/BobbyTables/master/LICENSE.txt</licenseUrl>
@@ -33,8 +33,12 @@
 	</metadata>
 	<files>
 		<file src="BobbyTables\bin\Release\BobbyTables.dll" target="lib\net20" />
+		<file src="BobbyTables\bin\Release\BobbyTables.XML" target="lib\net20" />
 		<file src="BobbyTables.Net40\bin\Release\BobbyTables.dll" target="lib\net40" />
+		<file src="BobbyTables.Net40\bin\Release\BobbyTables.XML" target="lib\net40" />
 		<file src="BobbyTables.Net45\bin\Release\BobbyTables.dll" target="lib\net45" />
+		<file src="BobbyTables.Net45\bin\Release\BobbyTables.XML" target="lib\net45" />
 		<file src="BobbyTables.Portable\bin\Release\BobbyTables.dll" target="lib\portable-net40+sl4+wp71+win8" />
+		<file src="BobbyTables.Portable\bin\Release\BobbyTables.XML" target="lib\portable-net40+sl4+wp71+win8" />
 	</files>
 </package>

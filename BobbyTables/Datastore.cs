@@ -12,14 +12,39 @@ using System.Threading.Tasks;
 
 namespace BobbyTables
 {
+	/// <summary>
+	/// A callback delegate for the async datastore pull operation
+	/// </summary>
 	public delegate void PullDelegate();
 
+	/// <summary>
+	/// A datastore which contains tables containing object data
+	/// </summary>
     public class Datastore
     {
+		/// <summary>
+		/// The Dropbox Id of this datastore
+		/// </summary>
 		public string Id { get; private set; }
+
+		/// <summary>
+		/// The Dropbox Handle for this datastore
+		/// </summary>
 		public string Handle { get; private set; }
+
+		/// <summary>
+		/// The Dropbox revision number for this datastore
+		/// </summary>
 		public long Rev { get; private set; }
+
+		/// <summary>
+		/// The title for this datastore Dropbox as defined by its Dropbox metadata
+		/// </summary>
 		public string Title { get; set; }
+
+		/// <summary>
+		/// The last modified date for this datastore Dropbox as defined by its Dropbox metadata
+		/// </summary>
 		public DateTime Modified { get; set; }
 
 		private Dictionary<string, Table> _tables;
@@ -97,7 +122,7 @@ namespace BobbyTables
 		/// <summary>
 		/// Save the database snapshot. Pending changes will not be saved
 		/// </summary>
-		/// <param name="snapshot">A stream to save the snapshot to</param>
+		/// <param name="writer">A writer to save the snapshot to</param>
 		public void Save(TextWriter writer)
 		{
 			using (var jsonWriter = new JsonTextWriter(writer))
@@ -522,7 +547,6 @@ namespace BobbyTables
 		/// </summary>
 		/// <param name="actions">The datastore operations to perform in the transaction. Note only synchronous operation
 		/// should be performed within the actions delegate</param>
-		/// <param name="retries">How many times to retry committing the actions before giving up</param>
 		/// <returns></returns>
 		public Transaction Transaction(TransactionDelegate actions)
 		{

@@ -7,8 +7,15 @@ using System.Threading.Tasks;
 
 namespace BobbyTables
 {
+	/// <summary>
+	/// A delegate used to contain all the operations that will occur in a given transaction
+	/// </summary>
 	public delegate void TransactionDelegate();
 
+	/// <summary>
+	/// Used to handle submitting serveral operations in a single atomic operation and handling
+	/// any possible conflicts by retrying those operations if necessary
+	/// </summary>
 	public class Transaction
 	{
 		private Datastore _store;
@@ -57,6 +64,9 @@ namespace BobbyTables
 		/// <summary>
 		/// Attempts to push all actions in the transaction to dropbox asynchronously
 		/// </summary>
+		/// <param name="retries">How many times to retry committing the actions before giving up</param>
+		/// <param name="success">Callback if the method is successful</param>
+		/// <param name="failure">Callback if the method fails</param>
 		/// <returns>True if the actions in the transaction were pushed to dropbox</returns>
 		public void PushAsync(Action<bool> success, Action<Exception> failure, int retries = 1)
 		{
@@ -117,6 +127,7 @@ namespace BobbyTables
 		/// <summary>
 		/// Attempts to push all actions in the transaction to dropbox
 		/// </summary>
+		/// <param name="retries">How many times to retry committing the actions before giving up</param>
 		/// <returns>True if the actions in the transaction were pushed to dropbox</returns>
 		public bool Push(int retries = 1)
 		{
