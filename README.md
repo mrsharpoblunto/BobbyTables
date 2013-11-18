@@ -78,6 +78,7 @@ if (await datastore.PushAsync()) {
   // Oh no! a conflict occurred due to another user submitting a change concurrently.
   // In this case we should revert our local changes, Pull in the latest changes and
   // try again. NOTE: The Transaction feature can help make handling conflicts easier.
+  datastore.Revert();
 }
 ```
 
