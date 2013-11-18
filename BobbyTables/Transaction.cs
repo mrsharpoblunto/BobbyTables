@@ -12,14 +12,12 @@ namespace BobbyTables
 	public class Transaction
 	{
 		private Datastore _store;
-		private int _retries;
 		TransactionDelegate _actions;
 
-		internal Transaction(Datastore store, TransactionDelegate actions, int retries)
+		internal Transaction(Datastore store, TransactionDelegate actions)
 		{
 			_store = store;
 			_actions = actions;
-			_retries = retries;
 		}
 
 #if NET45 || NET40 || PORTABLE
@@ -27,10 +25,10 @@ namespace BobbyTables
 		/// Attempts to push all actions in the transaction to dropbox asynchronously
 		/// </summary>
 		/// <returns>True if the actions in the transaction were pushed to dropbox</returns>
-		public async Task<bool> PushAsync()
+		public async Task<bool> PushAsync(int retries = 1)
 		{
 			int count = 0;
-			while (count <= _retries)
+			while (count <= retries)
 			{
 				_actions();
 
@@ -51,7 +49,7 @@ namespace BobbyTables
 
 		internal class PushAsyncContext 
 		{
-			public int Count;
+			public int Count,Retries;
 			public Action<bool> Success;
 			public Action<Exception> Failure;
 		};
@@ -60,11 +58,12 @@ namespace BobbyTables
 		/// Attempts to push all actions in the transaction to dropbox asynchronously
 		/// </summary>
 		/// <returns>True if the actions in the transaction were pushed to dropbox</returns>
-		public void PushAsync(Action<bool> success, Action<Exception> failure)
+		public void PushAsync(Action<bool> success, Action<Exception> failure, int retries = 1)
 		{
 			PushAsyncContext context = new PushAsyncContext
 			{
 				Count = 0,
+				Retries = retries,
 				Success = success,
 				Failure = failure
 			};
@@ -74,7 +73,7 @@ namespace BobbyTables
 
 		private void PushAsyncInternal(PushAsyncContext context)
 		{
-			if (context.Count > _retries)
+			if (context.Count > context.Retries)
 			{
 				context.Success(false);
 				return;
@@ -119,10 +118,10 @@ namespace BobbyTables
 		/// Attempts to push all actions in the transaction to dropbox
 		/// </summary>
 		/// <returns>True if the actions in the transaction were pushed to dropbox</returns>
-		public bool Push()
+		public bool Push(int retries = 1)
 		{
 			int count = 0;
-			while (count <= _retries)
+			while (count <= retries)
 			{
 				_actions();
 

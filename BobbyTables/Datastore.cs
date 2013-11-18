@@ -524,9 +524,9 @@ namespace BobbyTables
 		/// should be performed within the actions delegate</param>
 		/// <param name="retries">How many times to retry committing the actions before giving up</param>
 		/// <returns></returns>
-		public Transaction Transaction(TransactionDelegate actions,int retries=1)
+		public Transaction Transaction(TransactionDelegate actions)
 		{
-			return new Transaction(this,actions,retries);
+			return new Transaction(this,actions);
 		}
 
 		/// <summary>
