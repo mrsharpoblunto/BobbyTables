@@ -3,13 +3,13 @@
 	<metadata>
 		<id>BobbyTables</id>
 		<title>BobbyTables</title>
-		<version>1.0.3</version>
+		<version>1.1.0</version>
 		<authors>Glenn Conner</authors>
 		<owners>Glenn Conner</owners>
 		<licenseUrl>https://raw.github.com/mrsharpoblunto/BobbyTables/master/LICENSE.txt</licenseUrl>
 		<projectUrl>https://www.github.com/mrsharpoblunto/BobbyTables</projectUrl>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
-		<description>An ORM library for dropbox's datastore API</description>
+		<description>An ORM library for the Dropbox datastore API</description>
 		<releaseNotes />
 		<copyright />
 		<language>en-US</language>
