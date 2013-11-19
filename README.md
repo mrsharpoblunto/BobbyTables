@@ -159,10 +159,10 @@ Only public fields, and public readable/writable properties can be serialized. I
 
 The dropbox datastore API only has support for the following datatypes so any objects that have fields with an unsupported datatype will not be able to be serialized or deserialized correctly (Lists or Arrays of any of the below data types are also supported)
 
-| Dropbox datatype | .NET datatype         |
-|------------------|:----------------------|
-| str              | string                |
-| number           | float,Single,double   |
-| int              | int/uint 16,32,64     |
-| timestamp        | DateTime              |
-| blob             | List\<byte\>, byte[]  |
+| Dropbox datatype | .NET datatype             |
+|------------------|:--------------------------|
+| str              | string                    |
+| number           | float,Single,double       |
+| int              | Enums & int/uint 16,32,64 |
+| timestamp        | DateTime                  |
+| blob             | List\<byte\>, byte[]      |
