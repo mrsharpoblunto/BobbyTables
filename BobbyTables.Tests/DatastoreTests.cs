@@ -12,6 +12,13 @@ using NUnit.Framework;
 
 namespace BobbyTables.Tests
 {
+	public enum TestEnum
+	{
+		First,
+		Second,
+		Third
+	}
+
 	public class TestObject
 	{
 		public TestObject()
@@ -35,6 +42,7 @@ namespace BobbyTables.Tests
 			return "Should not get serialized";
 		}
 
+		public TestEnum EnumValue { get; set; }
 		public double DoubleValue;
 		public Single SingleValue;
 		public float FloatValue { get; set; }
@@ -116,6 +124,7 @@ namespace BobbyTables.Tests
 
 			var obj = new TestObject{
 				Id = "1",
+				EnumValue = TestEnum.Second,
 				DoubleValue = 1.0,
 				SingleValue = 2.0F,
 				FloatValue = 3.0F,
@@ -179,6 +188,9 @@ namespace BobbyTables.Tests
           ""I"": ""3""
         }
       ],
+      ""EnumValue"":{
+        ""I"":""1""
+      },
       ""FloatValue"": 3.0,
       ""IntValue"": {
         ""I"": ""1""
@@ -224,6 +236,7 @@ namespace BobbyTables.Tests
 
 			//verify the retrieved object is the same as the original
 			Assert.AreEqual(obj.Id,foundAgain.Id);
+			Assert.AreEqual(obj.EnumValue, TestEnum.Second);
 			Assert.AreEqual(obj.DoubleValue,foundAgain.DoubleValue);
 			Assert.AreEqual(obj.SingleValue,foundAgain.SingleValue);
 			Assert.AreEqual(obj.FloatValue,foundAgain.FloatValue);
@@ -292,7 +305,7 @@ namespace BobbyTables.Tests
 			mockGetRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
 
 			var mockSnapshotRequest = new Mock<IApiRequest>();
-			mockSnapshotRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""rows"": [{""tid"": ""test_objects"", ""data"": {""ByteArray"": {""B"": ""_wEA""}, ""UInt32Value"": {""I"": ""6""}, ""FloatValue"": 3.0, ""ByteList"": {""B"": ""AAH_""}, ""TimeValue"": {""T"": ""486086400000""}, ""LongValue"": {""I"": ""9""}, ""Int32Value"": {""I"": ""3""}, ""DoubleValue"": 1.0, ""IntList"": [{""I"": ""1""}, {""I"": ""2""}, {""I"": ""3""}], ""IntValue"": {""I"": ""1""}, ""Int16Value"": {""I"": ""2""}, ""UIntValue"": {""I"": ""4""}, ""UInt16Value"": {""I"": ""5""}, ""ULongValue"": {""I"": ""10""}, ""StringValue"": ""hello"", ""Int64Value"": {""I"": ""7""}, ""Id"": ""1"", ""SingleValue"": 2.0, ""StringList"": [""hello"", ""world""], ""UInt64Value"": {""I"": ""8""}}, ""rowid"": ""1""}], ""rev"": 28}"));
+			mockSnapshotRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""rows"": [{""tid"": ""test_objects"", ""data"": {""ByteArray"": {""B"": ""_wEA""},""EnumValue"": {""I"":""1""},""UInt32Value"": {""I"": ""6""}, ""FloatValue"": 3.0, ""ByteList"": {""B"": ""AAH_""}, ""TimeValue"": {""T"": ""486086400000""}, ""LongValue"": {""I"": ""9""}, ""Int32Value"": {""I"": ""3""}, ""DoubleValue"": 1.0, ""IntList"": [{""I"": ""1""}, {""I"": ""2""}, {""I"": ""3""}], ""IntValue"": {""I"": ""1""}, ""Int16Value"": {""I"": ""2""}, ""UIntValue"": {""I"": ""4""}, ""UInt16Value"": {""I"": ""5""}, ""ULongValue"": {""I"": ""10""}, ""StringValue"": ""hello"", ""Int64Value"": {""I"": ""7""}, ""Id"": ""1"", ""SingleValue"": 2.0, ""StringList"": [""hello"", ""world""], ""UInt64Value"": {""I"": ""8""}}, ""rowid"": ""1""}], ""rev"": 28}"));
 			mockSnapshotRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
 
 			var mockPushRequest = new Mock<IApiRequest>();
@@ -322,6 +335,7 @@ namespace BobbyTables.Tests
 
 			//lets make some changes to an existing object
 			obj.TimeValue = new DateTime(1985, 5, 29, 0, 0, 0, 0);
+			obj.EnumValue = TestEnum.Third;
 			obj.ByteList = new List<byte> { 0, 1, 255, 1 };
 			obj.ByteArray = new byte[] { 255, 1, 0, 255 };
 			obj.StringList.Insert(1, "there");
@@ -407,6 +421,9 @@ namespace BobbyTables.Tests
     [""U"", ""test_objects"", ""1"", {
         ""IntList"": [""LI"", 2, {
             ""I"": ""4""
+        }],
+		""EnumValue"":[""P"", {
+            ""I"":""2""
         }]
     }]
 ]".Replace(" ", string.Empty).Replace("\t", string.Empty).Replace("\r\n", string.Empty)), Times.Exactly(1));
@@ -435,6 +452,9 @@ namespace BobbyTables.Tests
                 {
                   ""ByteArray"": {
                     ""B"": ""_wEA""
+                  },
+                  ""EnumValue"": {
+                    ""I"":""1""
                   },
                   ""UInt32Value"": {
                     ""I"": ""6""
@@ -553,6 +573,9 @@ namespace BobbyTables.Tests
                 {
                   ""ByteArray"": {
                     ""B"": ""_wEA""
+                  },
+                  ""EnumValue"": {
+                    ""I"":""1""
                   },
                   ""UInt32Value"": {
                     ""I"": ""6""

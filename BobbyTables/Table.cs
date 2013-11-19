@@ -436,7 +436,7 @@ namespace BobbyTables
 				else
 				{
 					var op = new JArray();
-					op.Add("PUT");
+					op.Add("P");
 					operations.Add(op);
 				}
 			}
@@ -679,6 +679,13 @@ namespace BobbyTables
 				obj["B"] = Utils.ToDBase64((byte[])value);
 				return obj;
 			}
+			else if (type.IsEnum)
+			{
+				JObject obj = new JObject();
+				Enum.GetUnderlyingType(type);
+				obj["I"] = ((long)(int)value).ToString();
+				return obj;
+			}
 			else if (typeof(IList<byte>).IsAssignableFrom(type))
 			{
 				IList<byte> list = value as IList<byte>;
@@ -787,6 +794,10 @@ namespace BobbyTables
 				if (value["I"] != null)
 				{
 					//Integer values
+					if (type.IsEnum)
+					{
+						return Enum.ToObject(type, value["I"].Value<ulong>());
+					}
 					if (type == typeof(int))
 					{
 						return value["I"].Value<int>();
