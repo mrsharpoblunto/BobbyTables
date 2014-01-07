@@ -240,83 +240,18 @@
 
 <p>The first way is to specify the id separately from the object when it is inserted or updated as shown below</p>
 
-<div class="highlight highlight-c#"><pre>
-<span class="kt">var</span>
-<span class="n">table</span>
-<span class="p">=</span>
-<span class="n">datastore</span>
-<span class="p">.</span>
-<span class="n">GetTable</span>
-<span class="p">&lt;</span>
-<span class="n">Appointment</span>
-<span class="p">&gt;(</span>
-<span class="s">"appointments"</span>
-<span class="p">);</span>
-<span class="kt">var</span>
-<span class="n">new_appointment</span>
-<span class="p">=</span>
-<span class="k">new</span>
-<span class="n">Appointment</span>
-<span class="p">{</span>
-<span class="n">Time</span>
-<span class="p">=</span>
-<span class="n">DateTime</span>
-<span class="p">.</span>
-<span class="n">Now</span>
-<span class="p">()</span>
-<span class="p">};</span>
-<span class="n">table</span>
-<span class="p">.</span>
-<span class="n">Insert</span>
-<span class="p">(</span>
-<span class="s">"1"</span>
-<span class="p">,</span>
-<span class="n">new_appointment</span>
-<span class="p">);</span>
-	
+<div class="highlight highlight-c#"><pre><span class="kt">var</span><span class="n">table</span><span class="p">=</span><span class="n">datastore</span><span class="p">.</span><span class="n">GetTable</span><span class="p">&lt;</span><span class="n">Appointment</span><span class="p">&gt;(</span><span class="s">"appointments"</span><span class="p">);</span>
+<span class="kt">var</span><span class="n">new_appointment</span><span class="p">=</span><span class="k">new</span><span class="n">Appointment</span><span class="p">{</span><span class="n">Time</span><span class="p">=</span><span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">()</span><span class="p">};</span>
+
+<span class="n">table</span><span class="p">.</span><span class="n">Insert</span><span class="p">(</span><span class="s">"1"</span><span class="p">,</span><span class="n">new_appointment</span><span class="p">);</span>
 </pre></div>
 
 <p>The other option is to provide an id getter function which will return the value that should be used as the id for the object.</p>
 
-<div class="highlight highlight-c#"><pre>
-<span class="kt">var</span>
-<span class="n">table</span>
-<span class="p">=</span>
-<span class="n">datastore</span>
-<span class="p">.</span>
-<span class="n">GetTable</span>
-<span class="p">&lt;</span>
-<span class="n">Appointment</span>
-<span class="p">&gt;(</span>
-<span class="s">"appointments"</span>
-<span class="p">);</span>
-<span class="kt">var</span>
-<span class="n">new_appointment</span>
-<span class="p">=</span>
-<span class="k">new</span>
-<span class="n">Appointment</span>
-<span class="p">{</span>
-<span class="n">Time</span>
-<span class="p">=</span>
-<span class="n">DateTime</span>
-<span class="p">.</span>
-<span class="n">Now</span>
-<span class="p">()</span>
-<span class="p">};</span>
-<span class="n">table</span>
-<span class="p">.</span>
-<span class="n">Insert</span>
-<span class="p">(</span>
-<span class="n">obj</span>
-<span class="p">=&gt;</span>
-<span class="n">obj</span>
-<span class="p">.</span>
-<span class="n">Time</span>
-<span class="p">.</span>
-<span class="n">ToString</span>
-<span class="p">(),</span>
-<span class="n">new_appointment</span>
-<span class="p">);</span>
+<div class="highlight highlight-c#"><pre><span class="kt">var</span><span class="n">table</span><span class="p">=</span><span class="n">datastore</span><span class="p">.</span><span class="n">GetTable</span><span class="p">&lt;</span><span class="n">Appointment</span><span class="p">&gt;(</span><span class="s">"appointments"</span><span class="p">);</span>
+<span class="kt">var</span><span class="n">new_appointment</span><span class="p">=</span><span class="k">new</span><span class="n">Appointment</span><span class="p">{</span><span class="n">Time</span><span class="p">=</span><span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">()</span><span class="p">};</span>
+
+<span class="n">table</span><span class="p">.</span><span class="n">Insert</span><span class="p">(</span><span class="n">obj</span><span class="p">=&gt;</span><span class="n">obj</span><span class="p">.</span><span class="n">Time</span><span class="p">.</span><span class="n">ToString</span><span class="p">(),</span><span class="n">new_appointment</span><span class="p">);</span>
 </pre></div>
 
       </section>
