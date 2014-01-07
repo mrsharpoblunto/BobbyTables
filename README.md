@@ -67,7 +67,11 @@ new_appointment.People.Add("Jules");
 
 // insert the object into the table. An Id can also be specified for this method
 // though because this object has a public string field called Id, this is worked
-// out automatically. Also note this method is not awaited as it is only recording
+// out automatically (If you want you can inherit your objects from BobbyTables.Record
+// which will provide this Id field). 
+// Note: If the Id field is null or empty on insertion, it will be populated with an 
+// auto generated id.
+// Also note: this method is not awaited as it is only recording
 // the change as pending locally. No changes have been pushed to Dropbox yet.
 table.Insert(new_appointment);
 
@@ -166,3 +170,25 @@ The dropbox datastore API only has support for the following datatypes so any ob
 | int              | Enums & int/uint 16,32,64 |
 | timestamp        | DateTime                  |
 | blob             | List\<byte\>, byte[]      |
+
+
+#### Advanced options for handling object ids
+
+While BobbyTables will automatically look for an Id field on your objects when inserting and updating, it is possible to have more finegrained control over exactly which fields are used as the id for record objects. This can be useful in cases where you have domain objects that you cannot/do not wish to change in order to persist them to a datastore.
+
+The first way is to specify the id separately from the object when it is inserted or updated as shown below
+```c#
+var table = datastore.GetTable<Appointment>("appointments");
+
+var new_appointment = new Appointment{ Time = DateTime.Now() };
+table.Insert("1",new_appointment);
+```
+
+The other option is to provide an id getter function which will return the value that should be used as the id for the object.
+```c#
+var table = datastore.GetTable<Appointment>("appointments");
+
+var new_appointment = new Appointment{ Time = DateTime.Now() };
+table.Insert( obj => obj.Time.ToString(), new_appointment);
+```
+
