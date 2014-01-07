@@ -64,6 +64,11 @@ namespace BobbyTables.Tests
 		public List<int> IntList = new List<int>();
 	}
 
+	public class NoIdObject: Record
+	{
+		public string Description;
+	}
+
 	public class CustomObject
 	{
 
@@ -88,6 +93,123 @@ namespace BobbyTables.Tests
 			var factory = new Mock<IApiRequestFactory>();
 			ApiRequestFactory.Current = factory.Object;
 			RequestFactory = factory;
+		}
+
+		[Test]
+		public void InsertWithIdGetter()
+		{
+			var mockGetRequest = new Mock<IApiRequest>();
+			mockGetRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""handle"": ""yyyy"", ""rev"": 1, ""created"": false}"));
+			mockGetRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+			var mockSnapshotRequest = new Mock<IApiRequest>();
+			mockSnapshotRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""rows"": [], ""rev"": 1}"));
+			mockSnapshotRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+			var mockPushRequest = new Mock<IApiRequest>();
+			mockPushRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""rev"": 2}"));
+			mockPushRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+			RequestFactory
+				.Setup(api => api.CreateRequest("POST", "get_or_create_datastore", Manager.ApiToken))
+				.Returns(mockGetRequest.Object);
+
+			RequestFactory
+				.Setup(api => api.CreateRequest("POST", "get_snapshot", Manager.ApiToken))
+				.Returns(mockSnapshotRequest.Object);
+
+			RequestFactory
+				.Setup(api => api.CreateRequest("POST", "put_delta", Manager.ApiToken))
+				.Returns(mockPushRequest.Object);
+
+			var db = Manager.GetOrCreate("default");
+			db.Pull();
+			var table = db.GetTable<NoIdObject>("test_objects");
+
+			var obj = new NoIdObject { Description = "hello", Id="world" };
+
+			// use the description field for the objects id.
+			Assert.IsTrue(table.Insert(i=>i.Description, obj));
+
+			Assert.IsTrue(db.Push());
+
+			string expectedRequest = (@"[
+  [
+    ""I"",
+    ""test_objects"",
+    ""hello"",
+    {
+      ""Description"": ""hello"",
+      ""Id"": ""world""
+    }
+  ]
+]").Replace(" ", string.Empty).Replace("\r\n", string.Empty);
+
+			// check that we pushed the correct values to dropbox
+			mockPushRequest.Verify(req => req.AddParam("handle", "yyyy"), Times.Exactly(1));
+			mockPushRequest.Verify(req => req.AddParam("rev", "1"), Times.Exactly(1));
+			mockPushRequest.Verify(req => req.AddParam("changes", expectedRequest), Times.Exactly(1));
+		}
+
+		[Test]
+		public void InsertWithAutoIdGeneration()
+		{
+			var mockGetRequest = new Mock<IApiRequest>();
+			mockGetRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""handle"": ""yyyy"", ""rev"": 1, ""created"": false}"));
+			mockGetRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+			var mockSnapshotRequest = new Mock<IApiRequest>();
+			mockSnapshotRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""rows"": [], ""rev"": 1}"));
+			mockSnapshotRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+			var mockPushRequest = new Mock<IApiRequest>();
+			mockPushRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""rev"": 2}"));
+			mockPushRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+			RequestFactory
+				.Setup(api => api.CreateRequest("POST", "get_or_create_datastore", Manager.ApiToken))
+				.Returns(mockGetRequest.Object);
+
+			RequestFactory
+				.Setup(api => api.CreateRequest("POST", "get_snapshot", Manager.ApiToken))
+				.Returns(mockSnapshotRequest.Object);
+
+			RequestFactory
+				.Setup(api => api.CreateRequest("POST", "put_delta", Manager.ApiToken))
+				.Returns(mockPushRequest.Object);
+
+			var db = Manager.GetOrCreate("default");
+			db.Pull();
+			var table = db.GetTable<NoIdObject>("test_objects");
+
+			var obj = new NoIdObject { Description = "hello" };
+
+			// no id specified
+			Assert.IsTrue(string.IsNullOrEmpty(obj.Id));
+
+			Assert.IsTrue(table.Insert(obj));
+
+			// after insertion the id has been set
+			Assert.IsFalse(string.IsNullOrEmpty(obj.Id));
+
+			Assert.IsTrue(db.Push());
+
+			string expectedRequest = ( @"[
+  [
+    ""I"",
+    ""test_objects"",
+    """+obj.Id+ @""",
+    {
+      ""Description"": ""hello"",
+      ""Id"": """ + obj.Id + @"""
+    }
+  ]
+]" ).Replace(" ", string.Empty).Replace("\r\n", string.Empty);
+
+			// check that we pushed the correct values to dropbox
+			mockPushRequest.Verify(req => req.AddParam("handle", "yyyy"), Times.Exactly(1));
+			mockPushRequest.Verify(req => req.AddParam("rev", "1"), Times.Exactly(1));
+			mockPushRequest.Verify(req => req.AddParam("changes", expectedRequest), Times.Exactly(1));
 		}
 
 		[Test]

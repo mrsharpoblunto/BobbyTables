@@ -49,6 +49,9 @@
     <Compile Include="..\BobbyTables\IgnoreAttribute.cs">
       <Link>IgnoreAttribute.cs</Link>
     </Compile>
+    <Compile Include="..\BobbyTables\Record.cs">
+      <Link>Record.cs</Link>
+    </Compile>
     <Compile Include="..\BobbyTables\Table.cs">
       <Link>Table.cs</Link>
     </Compile>

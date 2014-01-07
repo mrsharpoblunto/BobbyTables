@@ -31,6 +31,9 @@ namespace BobbyTables
 		private List<JArray> _pendingChanges;
 		private DatastoreManager _manager;
 
+		internal delegate string IdGetter(object obj);
+		internal delegate void IdSetter(object obj, string id);
+
 		internal Table(DatastoreManager manager, Datastore store, string id)
 		{
 			Datastore = store;
@@ -225,14 +228,14 @@ namespace BobbyTables
 
 		#region public API
 
-		public bool Insert(object insert)
+		public bool Insert(IdGetter idGetter,IdSetter idSetter, object insert)
 		{
-			string id = GetObjectId(insert);
-			return Insert(id, insert);
-		}
+			string id = GetObjectId(insert, idGetter, idSetter);
+			if (string.IsNullOrEmpty(id))
+			{
+				throw new ArgumentException("Object to be inserted must have a non null/empty Id");
+			}
 
-		public bool Insert(string id, object insert)
-		{
 			Row row;
 			if (_rows.TryGetValue(id, out row))
 			{
@@ -338,14 +341,14 @@ namespace BobbyTables
 			}
 		}
 
-		public bool Update(object update)
+		public bool Update(IdGetter idGetter, object update)
 		{
-			string id = GetObjectId(update);
-			return Update(id, update);
-		}
+			string id = GetObjectId(update, idGetter, null);
+			if (string.IsNullOrEmpty(id))
+			{
+				throw new ArgumentException("Object to be updated must have a non null/empty Id");
+			}
 
-		public bool Update(string id, object update)
-		{
 			Row row;
 			if (_rows.TryGetValue(id, out row))
 			{
@@ -568,30 +571,22 @@ namespace BobbyTables
 			return sequence;
 		}
 
-		private static string GetObjectId(object update)
+		private static string GetObjectId(object update,IdGetter idGetter, IdSetter idSetter)
 		{
-			string id = null;
-
-			FieldInfo fieldInfo = update.GetType().GetField("Id");
-			if (fieldInfo != null && fieldInfo.FieldType == typeof(string))
+			string id = idGetter(update);
+			if (idSetter!=null && string.IsNullOrEmpty(id))
 			{
-				id = fieldInfo.GetValue(update) as string;
+				id = GenerateId();
+				idSetter(update, id);
 			}
-			else
-			{
-				PropertyInfo propInfo = update.GetType().GetProperty("Id");
-				if (propInfo != null && propInfo.PropertyType == typeof(string) && propInfo.CanRead && propInfo.CanWrite)
-				{
-					id = propInfo.GetValue(update,null) as string;
-				}
-			}
-
-			if (string.IsNullOrEmpty(id))
-			{
-				throw new ArgumentException("Update object does not have a non-empty public string Id field or property");
-			}
-
 			return id;
+		}
+
+		private static string GenerateId()
+		{
+			// generate a guid based id and shorten it
+			string encoded = Convert.ToBase64String(Guid.NewGuid().ToByteArray()).Replace("/", "_").Replace("+", "-");
+			return encoded.Substring(0, 22);
 		}
 
 		private static JToken SerializeValue(object value)
@@ -913,6 +908,20 @@ namespace BobbyTables
 		}
 
 		/// <summary>
+		/// Used to get the id for a tables record object type
+		/// </summary>
+		/// <param name="obj">a record object in a table</param>
+		/// <returns></returns>
+		public delegate string IdGetter(T obj);
+
+		/// <summary>
+		/// Used to set the id for a record object in a table
+		/// </summary>
+		/// <param name="obj">a record object in a table</param>
+		/// <param name="id">the id to set for this object</param>
+		public delegate void IdSetter(T obj, string id);
+
+		/// <summary>
 		/// Get the datastore this table belongs to
 		/// </summary>
 		public Datastore Datastore
@@ -934,23 +943,48 @@ namespace BobbyTables
 		/// Insert an object into a table row. The objects public fields or properties should only
 		/// contain primitive types or lists of primitive types in order to be serialized successfully
 		/// </summary>
+		/// <param name="idGetter">A function which returns the id value for the object to be inserted. This value cannot be null or empty</param>
+		/// <param name="insert">The object to insert</param>
+		/// <returns>True if the object is inserted, False if a row with this id already exists</returns>
+		public bool Insert(IdGetter idGetter, T insert)
+		{
+			return _table.Insert(obj => idGetter(obj as T), null, insert);
+		}
+
+		/// <summary>
+		/// Insert an object into a table row. The objects public fields or properties should only
+		/// contain primitive types or lists of primitive types in order to be serialized successfully
+		/// </summary>
 		/// <param name="id">The row id to insert the object into</param>
 		/// <param name="insert">The object to insert</param>
 		/// <returns>True if the object is inserted, False if a row with this id already exists</returns>
 		public bool Insert(string id, T insert)
 		{
-			return _table.Insert(id, insert);
+			return _table.Insert(obj => id,null, insert);
 		}
 
 		/// <summary>
 		/// Insert an object with a public Id field/property into a table row. The objects public fields or properties should only
-		/// contain primitive types or lists of primitive types in order to be serialized successfully
+		/// contain primitive types or lists of primitive types in order to be serialized successfully. If the public Id field is
+		/// empty or null, it will be set to an auto generated Id string.
 		/// </summary>
 		/// <param name="insert">The object to insert</param>
 		/// <returns>True if the object is inserted, False if a row with this id already exists</returns>
 		public bool Insert(T insert)
 		{
-			return _table.Insert(insert);
+			return _table.Insert(GetId,SetId,insert);
+		}
+
+		/// <summary>
+		/// Update an object in a table row. The objects public fields or properties should only
+		/// contain primitive types or lists of primitive types in order to be serialized successfully
+		/// </summary>
+		/// <param name="update">The object to update</param>
+		/// <param name="idGetter">A function that returns the id value for the object being updated. This value cannot be null or empty</param>
+		/// <returns>True if the object is updated, False if a row with this id does not exist</returns>
+		public bool Update(IdGetter idGetter, T update)
+		{
+			return _table.Update(obj => idGetter(obj as T), update);
 		}
 
 		/// <summary>
@@ -962,7 +996,7 @@ namespace BobbyTables
 		/// <returns>True if the object is updated, False if a row with this id does not exist</returns>
 		public bool Update(string id, T update)
 		{
-			return _table.Update(id, update);
+			return _table.Update(obj=>id, update);
 		}
 
 		/// <summary>
@@ -973,7 +1007,47 @@ namespace BobbyTables
 		/// <returns>True if the object is updated, False if a row with this id does not exist</returns>
 		public bool Update(T update)
 		{
-			return _table.Update(update);
+			return _table.Update(GetId,update);
+		}
+
+		private static string GetId(object update)
+		{
+			FieldInfo fieldInfo = update.GetType().GetField("Id");
+			if (fieldInfo != null && fieldInfo.FieldType == typeof(string))
+			{
+				return fieldInfo.GetValue(update) as string;
+			}
+			else
+			{
+				PropertyInfo propInfo = update.GetType().GetProperty("Id");
+				if (propInfo != null && propInfo.PropertyType == typeof(string) && propInfo.CanRead && propInfo.CanWrite)
+				{
+					return propInfo.GetValue(update, null) as string;
+				}
+			}
+
+			throw new ArgumentException("Object does not have a public string Id field or property");
+		}
+
+		private static void SetId(object update, string id)
+		{
+			FieldInfo fieldInfo = update.GetType().GetField("Id");
+			if (fieldInfo != null && fieldInfo.FieldType == typeof(string))
+			{
+				fieldInfo.SetValue(update, id);
+				return;
+			}
+			else
+			{
+				PropertyInfo propInfo = update.GetType().GetProperty("Id");
+				if (propInfo != null && propInfo.PropertyType == typeof(string) && propInfo.CanRead && propInfo.CanWrite)
+				{
+					propInfo.SetValue(update, id, null);
+					return;
+				}
+			}
+
+			throw new ArgumentException("Object does not have a public string Id field or property");
 		}
 
 		/// <summary>
