@@ -103,7 +103,11 @@
 
 <span class="c1">// insert the object into the table. An Id can also be specified for this method</span>
 <span class="c1">// though because this object has a public string field called Id, this is worked</span>
-<span class="c1">// out automatically. Also note this method is not awaited as it is only recording</span>
+<span class="c1">// out automatically. (If you want you can inherit your objects from BobbyTables.Record</span>
+<span class="c1">// which will provide this Id field).</span>
+<span class="c1">// Note: If the Id field is null or empty on insertion, it will be populated with an</span> 
+<span class="c1">// auto generated id.</span>
+<span class="c1">// Also note: this method is not awaited as it is only recording</span>
 <span class="c1">// the change as pending locally. No changes have been pushed to Dropbox yet.</span>
 <span class="n">table</span><span class="p">.</span><span class="n">Insert</span><span class="p">(</span><span class="n">new_appointment</span><span class="p">);</span>
 
@@ -228,6 +232,93 @@
 </tr>
 </tbody>
 </table>
+
+<h4>
+<a name="Advanced options for handling object ids" class="anchor" href="#advanced-options-for-handling-object-ids"><span class="octicon octicon-link"></span></a>Advanced options for handling object ids</h4>
+
+<p>While BobbyTables will automatically look for an Id field on your objects when inserting and updating, it is possible to have more finegrained control over exactly which fields are used as the id for record objects. This can be useful in cases where you have domain objects that you cannot/do not wish to change in order to persist them to a datastore.</p>
+
+<p>The first way is to specify the id separately from the object when it is inserted or updated as shown below</p>
+
+<div class="highlight highlight-c#"><pre>
+<span class="kt">var</span>
+<span class="n">table</span>
+<span class="p">=</span>
+<span class="n">datastore</span>
+<span class="p">.</span>
+<span class="n">GetTable</span>
+<span class="p"><</span>
+<span class="n">Appointment</span>
+<span class="p">>(</span>
+<span class="s">"appointments"</span>
+<span class="p">);</span>
+<span class="kt">var</span>
+<span class="n">new_appointment</span>
+<span class="p">=</span>
+<span class="k">new</span>
+<span class="n">Appointment</span>
+<span class="p">{</span>
+<span class="n">Time</span>
+<span class="p">=</span>
+<span class="n">DateTime</span>
+<span class="p">.</span>
+<span class="n">Now</span>
+<span class="p">()</span>
+<span class="p">};</span>
+<span class="n">table</span>
+<span class="p">.</span>
+<span class="n">Insert</span>
+<span class="p">(</span>
+<span class="s">"1"</span>
+<span class="p">,</span>
+<span class="n">new_appointment</span>
+<span class="p">);</span>
+	
+</pre></div>
+
+<p>The other option is to provide an id getter function which will return the value that should be used as the id for the object.</p>
+
+<div class="highlight highlight-c#"><pre>
+<span class="kt">var</span>
+<span class="n">table</span>
+<span class="p">=</span>
+<span class="n">datastore</span>
+<span class="p">.</span>
+<span class="n">GetTable</span>
+<span class="p"><</span>
+<span class="n">Appointment</span>
+<span class="p">>(</span>
+<span class="s">"appointments"</span>
+<span class="p">);</span>
+<span class="kt">var</span>
+<span class="n">new_appointment</span>
+<span class="p">=</span>
+<span class="k">new</span>
+<span class="n">Appointment</span>
+<span class="p">{</span>
+<span class="n">Time</span>
+<span class="p">=</span>
+<span class="n">DateTime</span>
+<span class="p">.</span>
+<span class="n">Now</span>
+<span class="p">()</span>
+<span class="p">};</span>
+<span class="n">table</span>
+<span class="p">.</span>
+<span class="n">Insert</span>
+<span class="p">(</span>
+<span class="n">obj</span>
+<span class="p">=></span>
+<span class="n">obj</span>
+<span class="p">.</span>
+<span class="n">Time</span>
+<span class="p">.</span>
+<span class="n">ToString</span>
+<span class="p">(),</span>
+<span class="n">new_appointment</span>
+<span class="p">);</span>
+</pre></div>
+
       </section>
       <footer>
         <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
