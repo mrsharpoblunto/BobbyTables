@@ -443,11 +443,14 @@ namespace BobbyTables
 				foreach (var store in datastores)
 				{
 					var delta = allDeltas[store.Handle];
-					if (delta["notfoundresult"] == null)
-					{
-						store.ApplyChanges(delta);
-						changed.Add(store);
-					}
+                    if (delta != null)
+                    {
+                        if (delta["notfoundresult"] == null)
+                        {
+                            store.ApplyChanges(delta);
+                            changed.Add(store);
+                        }
+                    }
 				}
 			}
 			return changed.Count > 0;
