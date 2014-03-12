@@ -297,40 +297,53 @@ namespace BobbyTables
 			return false;
 		}
 
-		public T Get<T>(string id) 
-			where T : class, new()
-		{
-			Row row;
-			if (_rows.TryGetValue(id, out row) && row.Data != null)
-			{
-				T obj = new T();
-				foreach (var field in obj.GetType().GetFields())
-				{
-					if (field.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0)
-					{
-						var data = row.Data[field.Name];
-						if (data != null)
-						{
-							field.SetValue(obj, DeserializeValue(data, field.FieldType));
-						}
-					}
-				}
-				foreach (var prop in obj.GetType().GetProperties())
-				{
-					// we are only interested in read/writable fields
-					if (prop.GetCustomAttributes(typeof(IgnoreAttribute), true).Length==0 && prop.CanRead && prop.CanWrite)
-					{
-						var data = row.Data[prop.Name];
-						if (data != null)
-						{
-							prop.SetValue(obj, DeserializeValue(data, prop.PropertyType),null);
-						}
-					}
-				}
-				return obj;
-			}
-			return default(T);
-		}
+        public T Get<T>(string id)
+          where T : class, new()
+        {
+            Row row;
+            if (_rows.TryGetValue(id, out row) && row.Data != null)
+            {
+                bool rowDataHasIdProperty = row.Data.GetValue("Id") != null;
+
+                T obj = new T();
+                foreach (var field in obj.GetType().GetFields())
+                {
+                    if (field.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0)
+                    {
+                        var data = row.Data[field.Name];
+                        if (data != null)
+                        {
+                            field.SetValue(obj, DeserializeValue(data, field.FieldType));
+                        }
+
+                        if (!rowDataHasIdProperty && field.Name.Equals("Id"))
+                        {
+                            field.SetValue(obj, DeserializeValue(id, field.FieldType));
+                        }
+                    }
+                }
+                foreach (var prop in obj.GetType().GetProperties())
+                {
+                    // we are only interested in read/writable fields
+                    if (prop.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0 && prop.CanRead && prop.CanWrite)
+                    {
+                        var data = row.Data[prop.Name];
+                        if (data != null)
+                        {
+                            prop.SetValue(obj, DeserializeValue(data, prop.PropertyType), null);
+                        }
+
+                        if (!rowDataHasIdProperty && prop.Name.Equals("Id"))
+                        {
+                            prop.SetValue(obj, DeserializeValue(id, prop.PropertyType), null);
+                        }
+                    }
+                }
+
+                return obj;
+            }
+            return default(T);
+        }
 
 		public IEnumerable<T> GetAll<T>()
 			where T : class, new()
