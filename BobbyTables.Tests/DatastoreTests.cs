@@ -795,14 +795,14 @@ namespace BobbyTables.Tests
 			Assert.AreEqual("hello", foundAgain.StringValue);
 		}
 
-        [Test]
-        public void AwaitDatastoreChanges_WhenLocalDatastoreDoesNotHaveDeltas()
-        {
-            var mockRequest = new Mock<IApiRequest>();
-            mockRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""datastores"": [{""handle"": ""yyyy"", ""rev"": 0, ""dsid"": ""default""}, {""handle"": ""no-delta"", ""rev"": 0, ""dsid"": ""no-delta""}], ""token"": ""zzzz""}"));
+		[Test]
+		public void AwaitDatastoreChanges_WhenLocalDatastoreDoesNotHaveDeltas()
+		{
+			var mockRequest = new Mock<IApiRequest>();
+			mockRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""datastores"": [{""handle"": ""yyyy"", ""rev"": 0, ""dsid"": ""default""}, {""handle"": ""no-delta"", ""rev"": 0, ""dsid"": ""no-delta""}], ""token"": ""zzzz""}"));
 
-            var mockAwaitPullRequest = new Mock<IApiRequest>();
-            mockAwaitPullRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{
+			var mockAwaitPullRequest = new Mock<IApiRequest>();
+			mockAwaitPullRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{
   ""get_deltas"": {
     ""deltas"": {
       ""yyyy"": {
@@ -887,36 +887,36 @@ namespace BobbyTables.Tests
     }
   }
 }"));
-            mockAwaitPullRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+			mockAwaitPullRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
 
-            RequestFactory
-                .Setup(api => api.CreateRequest("GET", "list_datastores", Manager.ApiToken))
-                .Returns(mockRequest.Object);
+			RequestFactory
+				.Setup(api => api.CreateRequest("GET", "list_datastores", Manager.ApiToken))
+				.Returns(mockRequest.Object);
 
-            JObject args = new JObject();
-            args["cursors"] = new JObject();
-            args["cursors"]["yyyy"] = 0;
-            args["cursors"]["no-delta"] = 0;
+			JObject args = new JObject();
+			args["cursors"] = new JObject();
+			args["cursors"]["yyyy"] = 0;
+			args["cursors"]["no-delta"] = 0;
 
-            RequestFactory
-                .Setup(api => api.CreateRequest("GET", "await?get_deltas=" + Uri.EscapeDataString(args.ToString(Formatting.None)), Manager.ApiToken))
-                .Returns(mockAwaitPullRequest.Object);
+			RequestFactory
+				.Setup(api => api.CreateRequest("GET", "await?get_deltas=" + Uri.EscapeDataString(args.ToString(Formatting.None)), Manager.ApiToken))
+				.Returns(mockAwaitPullRequest.Object);
 
-            List<Datastore> stores = new List<Datastore>();
-            Assert.IsTrue(Manager.AwaitDatastoreChanges(stores));
-            Assert.AreEqual(1, stores.Count);
+			List<Datastore> stores = new List<Datastore>();
+			Assert.IsTrue(Manager.AwaitDatastoreChanges(stores));
+			Assert.AreEqual(1, stores.Count);
 
-            var table = stores[0].GetTable<TestObject>("test_objects");
+			var table = stores[0].GetTable<TestObject>("test_objects");
 
-            // ensure that the database was populated by the await call
-            var foundAgain = table.Get("1");
-            Assert.IsNotNull(foundAgain);
+			// ensure that the database was populated by the await call
+			var foundAgain = table.Get("1");
+			Assert.IsNotNull(foundAgain);
 
-            //verify the retrieved object is the same as the original
-            Assert.AreEqual("1", foundAgain.Id);
-            Assert.AreEqual(1.0, foundAgain.DoubleValue);
-            Assert.AreEqual("hello", foundAgain.StringValue);
-        }
+			//verify the retrieved object is the same as the original
+			Assert.AreEqual("1", foundAgain.Id);
+			Assert.AreEqual(1.0, foundAgain.DoubleValue);
+			Assert.AreEqual("hello", foundAgain.StringValue);
+		}
 
 
 		[Test]
