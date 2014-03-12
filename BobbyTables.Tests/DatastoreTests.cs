@@ -795,6 +795,130 @@ namespace BobbyTables.Tests
 			Assert.AreEqual("hello", foundAgain.StringValue);
 		}
 
+        [Test]
+        public void AwaitDatastoreChanges_WhenLocalDatastoreDoesNotHaveDeltas()
+        {
+            var mockRequest = new Mock<IApiRequest>();
+            mockRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""datastores"": [{""handle"": ""yyyy"", ""rev"": 0, ""dsid"": ""default""}, {""handle"": ""no-delta"", ""rev"": 0, ""dsid"": ""no-delta""}], ""token"": ""zzzz""}"));
+
+            var mockAwaitPullRequest = new Mock<IApiRequest>();
+            mockAwaitPullRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{
+  ""get_deltas"": {
+    ""deltas"": {
+      ""yyyy"": {
+        ""deltas"": [
+          {
+            ""nonce"": """",
+            ""changes"": [
+              [
+                ""I"",
+                ""test_objects"",
+                ""1"",
+                {
+                  ""ByteArray"": {
+                    ""B"": ""_wEA""
+                  },
+                  ""EnumValue"": {
+                    ""I"":""1""
+                  },
+                  ""UInt32Value"": {
+                    ""I"": ""6""
+                  },
+                  ""FloatValue"": 3,
+                  ""LongValue"": {
+                    ""I"": ""9""
+                  },
+                  ""ByteList"": {
+                    ""B"": ""AAH_""
+                  },
+                  ""TimeValue"": {
+                    ""T"": ""486086400000""
+                  },
+                  ""Int32Value"": {
+                    ""I"": ""3""
+                  },
+                  ""DoubleValue"": 1,
+                  ""StringList"": [
+                    ""hello"",
+                    ""world""
+                  ],
+                  ""ULongValue"": {
+                    ""I"": ""10""
+                  },
+                  ""IntValue"": {
+                    ""I"": ""1""
+                  },
+                  ""Int16Value"": {
+                    ""I"": ""2""
+                  },
+                  ""UIntValue"": {
+                    ""I"": ""4""
+                  },
+                  ""UInt16Value"": {
+                    ""I"": ""5""
+                  },
+                  ""IntList"": [
+                    {
+                      ""I"": ""1""
+                    },
+                    {
+                      ""I"": ""2""
+                    },
+                    {
+                      ""I"": ""3""
+                    }
+                  ],
+                  ""StringValue"": ""hello"",
+                  ""Int64Value"": {
+                    ""I"": ""7""
+                  },
+                  ""SingleValue"": 2,
+                  ""Id"": ""1"",
+                  ""UInt64Value"": {
+                    ""I"": ""8""
+                  }
+                }
+              ]
+            ],
+            ""rev"": 1
+          }
+        ]
+      }
+    }
+  }
+}"));
+            mockAwaitPullRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+            RequestFactory
+                .Setup(api => api.CreateRequest("GET", "list_datastores", Manager.ApiToken))
+                .Returns(mockRequest.Object);
+
+            JObject args = new JObject();
+            args["cursors"] = new JObject();
+            args["cursors"]["yyyy"] = 0;
+            args["cursors"]["no-delta"] = 0;
+
+            RequestFactory
+                .Setup(api => api.CreateRequest("GET", "await?get_deltas=" + Uri.EscapeDataString(args.ToString(Formatting.None)), Manager.ApiToken))
+                .Returns(mockAwaitPullRequest.Object);
+
+            List<Datastore> stores = new List<Datastore>();
+            Assert.IsTrue(Manager.AwaitDatastoreChanges(stores));
+            Assert.AreEqual(1, stores.Count);
+
+            var table = stores[0].GetTable<TestObject>("test_objects");
+
+            // ensure that the database was populated by the await call
+            var foundAgain = table.Get("1");
+            Assert.IsNotNull(foundAgain);
+
+            //verify the retrieved object is the same as the original
+            Assert.AreEqual("1", foundAgain.Id);
+            Assert.AreEqual(1.0, foundAgain.DoubleValue);
+            Assert.AreEqual("hello", foundAgain.StringValue);
+        }
+
+
 		[Test]
 		public void ChangesNotPushedWhenConflictOccurs()
 		{
