@@ -192,3 +192,10 @@ var new_appointment = new Appointment{ Time = DateTime.Now() };
 table.Insert( obj => obj.Time.ToString(), new_appointment);
 ```
 
+Similarly, you can provide an id setter function when deserializing/enumerating objects if the object you are dealing with does not have a public
+Id field or property
+```c#
+var table = datastore.GetTable<Appointment>("appointments");
+var appointment = table.Get( (obj,value) => obj.SetId(value), "1");
+```
+
