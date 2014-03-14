@@ -254,6 +254,13 @@
 <span class="n">table</span><span class="p">.</span><span class="n">Insert</span><span class="p">(</span><span class="n">obj</span><span class="p"> =&gt; </span><span class="n">obj</span><span class="p">.</span><span class="n">Time</span><span class="p">.</span><span class="n">ToString</span><span class="p">(),</span> <span class="n">new_appointment</span><span class="p">);</span>
 </pre></div>
 
+<p>Similarly, you can provide an id setter function when deserializing/enumerating objects if the object you are dealing with does not have a public
+Id field or property.</p>
+
+<div class="highlight highlight-c#"><pre><span class="kt">var</span> <span class="n">table</span> <span class="p">=</span> <span class="n">datastore</span><span class="p">.</span><span class="n">GetTable</span><span class="p">&lt;</span><span class="n">Appointment</span><span class="p">&gt;(</span><span class="s">"appointments"</span><span class="p">);</span>
+<span class="kt">var</span> <span class="n">appointment</span><span class="p"> = </span><span class="n">table</span><span class="p">.</span><span class="n">Get</span><span class="p">(( </span><span class="n">obj</span><span class="p">, </span><span class="n">value</span><span class="p"> ) =&gt; </span><span class="n">obj</span><span class="p">.</span><span class="n">SetId</span><span class="p">(</span><span class="n">value</span><span class="p">), </span><span class="s">"1"</span><span class="p">);</span>
+</pre></div>
+
       </section>
       <footer>
         <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
