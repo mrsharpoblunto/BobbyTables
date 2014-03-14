@@ -1,0 +1,276 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>BobbyTables</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1 class="header">BobbyTables</h1>
+        <p class="header">A .Net ORM library for the Dropbox datastore API</p>
+
+        <ul>
+          <li class="download"><a class="buttons" href="https://github.com/mrsharpoblunto/BobbyTables/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/mrsharpoblunto/BobbyTables/tarball/master">Download TAR</a></li>
+          <li class="download"><a class="buttons" href="https://www.nuget.org/packages/BobbyTables/">NuGet Package</a></li>
+          <li><a class="buttons github" href="https://github.com/mrsharpoblunto/BobbyTables">View On GitHub</a></li>
+        </ul>
+
+        <p class="header">This project is maintained by <a class="header name" href="https://github.com/mrsharpoblunto">mrsharpoblunto</a></p>
+	<a href="https://twitter.com/mr_sharpoblunto" class="twitter-follow-button" data-show-count="false" data-lang="en">Follow @mr_sharpoblunto</a>
+
+      </header>
+      <section>
+        <h1>
+<a name="bobbytables" class="anchor" href="#bobbytables"><span class="octicon octicon-link"></span></a>BobbyTables</h1>
+
+<p>BobbyTables is a .Net ORM library for the Dropbox datastore API. It handles serializing and deserializing objects to and from the remote Dropbox datastore as well as handling pushing/pulling updates. BobbyTables supports .Net versions 2+, Silverlight 4+, Windows Phone 7.5+, and Windows store applications.</p>
+
+<h3>
+<a name="api--usage" class="anchor" href="#api--usage"><span class="octicon octicon-link"></span></a>API &amp; Usage</h3>
+
+<h4>
+<a name="datastoremanager" class="anchor" href="#datastoremanager"><span class="octicon octicon-link"></span></a>DatastoreManager</h4>
+
+<hr><p>The DatastoreManager object is used to list/add/remove datastore objects. To create a DatastoreManager, you will need a Dropbox OAuth 2.0 bearer token (You can get this by completing an OAuth 2.0 handshake - see <a href="https://www.dropbox.com/developers/core/docs#oa2-authorize">https://www.dropbox.com/developers/core/docs#oa2-authorize</a> for more details)</p>
+
+<div class="highlight highlight-c#"><pre><span class="kt">var</span> <span class="n">manager</span> <span class="p">=</span> <span class="k">new</span> <span class="n">DatastoreManager</span><span class="p">(</span><span class="s">"oauth_token"</span><span class="p">);</span>
+
+<span class="c1">// Getting or creating a datastore</span>
+<span class="kt">var</span> <span class="n">datastore</span> <span class="p">=</span> <span class="k">await</span> <span class="n">manager</span><span class="p">.</span><span class="n">GetOrCreateAsync</span><span class="p">(</span><span class="s">"test"</span><span class="p">);</span>
+
+<span class="c1">// Getting an existing datastore</span>
+<span class="kt">var</span> <span class="n">existing_datastore</span> <span class="p">=</span> <span class="k">await</span> <span class="n">manager</span><span class="p">.</span><span class="n">GetAsync</span><span class="p">(</span><span class="s">"default"</span><span class="p">);</span>
+
+<span class="c1">// Listing available datastores</span>
+<span class="kt">var</span> <span class="n">datastore_list</span> <span class="p">=</span> <span class="k">await</span> <span class="n">manager</span><span class="p">.</span><span class="n">ListAsync</span><span class="p">();</span>
+<span class="k">foreach</span> <span class="p">(</span><span class="kt">var</span> <span class="n">ds</span> <span class="k">in</span> <span class="n">datastore_list</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// ...</span>
+<span class="p">}</span>
+
+<span class="c1">// Deleting a datastore</span>
+<span class="k">await</span> <span class="n">manager</span><span class="p">.</span><span class="n">DeleteAsync</span><span class="p">(</span><span class="n">datastore</span><span class="p">);</span>
+
+<span class="c1">// Wait for up to a minute or for remote changes to occur, whichever comes first</span>
+<span class="n">List</span><span class="p">&lt;</span><span class="n">Datastore</span><span class="p">&gt;</span> <span class="n">changed</span> <span class="p">=</span> <span class="k">new</span> <span class="n">List</span><span class="p">&lt;</span><span class="n">Datastore</span><span class="p">&gt;();</span>
+<span class="k">if</span> <span class="p">(</span><span class="k">await</span> <span class="n">manager</span><span class="p">.</span><span class="n">AwaitDatastoreChangesAsync</span><span class="p">(</span><span class="n">changed</span><span class="p">))</span> <span class="p">{</span>
+  <span class="c1">// Any datastores that have remote changes applied are now in the changed list</span>
+<span class="p">}</span>
+
+<span class="c1">// Wait for up to a minute or for a change to the list of datastores, whichever comes first</span>
+<span class="k">if</span> <span class="p">(</span><span class="k">await</span> <span class="n">manager</span><span class="p">.</span><span class="n">AwaitListChangesAsync</span><span class="p">())</span> <span class="p">{</span>
+  <span class="c1">// calling manager.ListAsync will retrieve the changed list of datastores</span>
+<span class="p">}</span>
+</pre></div>
+
+<p><strong>NOTE</strong>: All API methods that make remote requests to dropbox have a synchronous implementation, an async implementation that uses .net 4.5 async/await, and an async implementation that uses callback functions for when async/await is not supported.</p>
+
+<h4>
+<a name="datastore" class="anchor" href="#datastore"><span class="octicon octicon-link"></span></a>Datastore</h4>
+
+<hr><p>A Datastore object Is analagous to a Database object in a typical ORM library. A Datastore contains Tables that can contain objects which can be added/updated/removed</p>
+
+<h4>
+<a name="inserting-data-into-a-datastore-table" class="anchor" href="#inserting-data-into-a-datastore-table"><span class="octicon octicon-link"></span></a>Inserting data into a datastore table</h4>
+
+<div class="highlight highlight-c#"><pre><span class="k">class</span> <span class="nc">Appointment</span> <span class="p">{</span>
+  <span class="k">public</span> <span class="kt">string</span> <span class="n">Id</span><span class="p">;</span>
+  <span class="k">public</span> <span class="n">DateTime</span> <span class="n">Time</span><span class="p">;</span>
+  <span class="k">public</span> <span class="n">List</span><span class="p">&lt;</span><span class="n">String</span><span class="p">&gt;</span> <span class="n">People</span> <span class="p">=</span> <span class="k">new</span> <span class="n">List</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">&gt;();</span>
+<span class="p">}</span>
+
+<span class="p">...</span>
+
+<span class="c1">// pull in any remote changes and make sure we are up to date before</span>
+<span class="c1">// trying to apply our own local changes</span>
+<span class="k">await</span> <span class="n">datastore</span><span class="p">.</span><span class="n">PullAsync</span><span class="p">();</span>
+
+<span class="c1">// get a reference to the appointments table</span>
+<span class="kt">var</span> <span class="n">table</span> <span class="p">=</span> <span class="n">datastore</span><span class="p">.</span><span class="n">GetTable</span><span class="p">&lt;</span><span class="n">Appointment</span><span class="p">&gt;(</span><span class="s">"appointments"</span><span class="p">);</span>
+
+<span class="kt">var</span> <span class="n">new_appointment</span> <span class="p">=</span> <span class="k">new</span> <span class="n">Appointment</span><span class="p">{</span> <span class="n">Id</span> <span class="p">=</span> <span class="s">"1"</span><span class="p">,</span> <span class="n">Time</span> <span class="p">=</span> <span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">()</span> <span class="p">};</span>
+<span class="n">new_appointment</span><span class="p">.</span><span class="n">People</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="s">"Jules"</span><span class="p">);</span>
+
+<span class="c1">// insert the object into the table. An Id can also be specified for this method</span>
+<span class="c1">// though because this object has a public string field called Id, this is worked</span>
+<span class="c1">// out automatically. (If you want you can inherit your objects from BobbyTables.Record</span>
+<span class="c1">// which will provide this Id field).</span>
+<span class="c1">// Note: If the Id field is null or empty on insertion, it will be populated with an</span> 
+<span class="c1">// auto generated id.</span>
+<span class="c1">// Also note: this method is not awaited as it is only recording</span>
+<span class="c1">// the change as pending locally. No changes have been pushed to Dropbox yet.</span>
+<span class="n">table</span><span class="p">.</span><span class="n">Insert</span><span class="p">(</span><span class="n">new_appointment</span><span class="p">);</span>
+
+<span class="c1">// now lets commit the pending insert and push it out to Dropbox</span>
+<span class="k">if</span> <span class="p">(</span><span class="k">await</span> <span class="n">datastore</span><span class="p">.</span><span class="n">PushAsync</span><span class="p">())</span> <span class="p">{</span>
+  <span class="c1">// Yay! the changes were accepted</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+  <span class="c1">// Oh no! a conflict occurred due to another user submitting a change concurrently.</span>
+  <span class="c1">// In this case we should revert our local changes, Pull in the latest changes and</span>
+  <span class="c1">// try again. NOTE: The Transaction feature can help make handling conflicts easier.</span>
+  <span class="n">datastore</span><span class="p">.</span><span class="n">Revert</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+
+<h4>
+<a name="using-transactions-to-handle-conflicts" class="anchor" href="#using-transactions-to-handle-conflicts"><span class="octicon octicon-link"></span></a>Using transactions to handle conflicts</h4>
+
+<div class="highlight highlight-c#"><pre>  <span class="c1">// every operation inside the transaction will try to be pushed to Dropbox in a single</span>
+  <span class="c1">// commit. If anything fails, all changes are reverted, the latest changes are pulled</span>
+  <span class="c1">// from Dropbox, and the changes will be re-applied until the commit succeeds, or the </span>
+  <span class="c1">// max number of retries is exceeded</span>
+  <span class="kt">var</span> <span class="n">success</span> <span class="p">=</span> <span class="k">await</span> <span class="n">datastore</span><span class="p">.</span><span class="n">Transaction</span><span class="p">(()=&gt;</span> <span class="p">{</span>
+    <span class="kt">var</span> <span class="n">table</span> <span class="p">=</span> <span class="n">datastore</span><span class="p">.</span><span class="n">GetTable</span><span class="p">&lt;</span><span class="n">Appointment</span><span class="p">&gt;(</span><span class="s">"appointments"</span><span class="p">);</span>
+
+    <span class="kt">var</span> <span class="n">new_appointment</span> <span class="p">=</span> <span class="k">new</span> <span class="n">Appointment</span><span class="p">{</span> <span class="n">Id</span> <span class="p">=</span> <span class="s">"1"</span><span class="p">,</span> <span class="n">Time</span> <span class="p">=</span> <span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">()</span> <span class="p">};</span>
+    <span class="n">new_appointment</span><span class="p">.</span><span class="n">People</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="s">"Jules"</span><span class="p">);</span>
+
+    <span class="n">table</span><span class="p">.</span><span class="n">Insert</span><span class="p">(</span><span class="n">new_appointment</span><span class="p">);</span>
+  <span class="p">}).</span><span class="n">PushAsync</span><span class="p">();</span> <span class="c1">// can specify the number of retries as a parameter (default 1)</span>
+
+</pre></div>
+
+<h4>
+<a name="retrieving-and-updating-existing-data" class="anchor" href="#retrieving-and-updating-existing-data"><span class="octicon octicon-link"></span></a>Retrieving and updating existing data</h4>
+
+<div class="highlight highlight-c#"><pre><span class="kt">var</span> <span class="n">table</span> <span class="p">=</span> <span class="n">datastore</span><span class="p">.</span><span class="n">GetTable</span><span class="p">&lt;</span><span class="n">Appointment</span><span class="p">&gt;(</span><span class="s">"appointments"</span><span class="p">);</span>
+
+<span class="c1">// can search for objects using LINQ queries</span>
+<span class="kt">var</span> <span class="n">appointment</span> <span class="p">=</span> <span class="p">(</span><span class="k">from</span> <span class="n">appt</span> <span class="k">in</span> <span class="n">table</span> <span class="k">where</span> <span class="n">t</span><span class="p">.</span><span class="n">Id</span> <span class="p">==</span> <span class="s">"1"</span> <span class="k">select</span> <span class="n">appt</span><span class="p">).</span><span class="n">SingleOrDefault</span><span class="p">();</span>
+
+<span class="c1">// or you can search using the Id directly</span>
+<span class="n">appointment</span> <span class="p">=</span> <span class="n">table</span><span class="p">.</span><span class="n">Get</span><span class="p">(</span><span class="s">"1"</span><span class="p">);</span>
+
+<span class="n">appointment</span><span class="p">.</span><span class="n">People</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="s">"Vincent"</span><span class="p">);</span>
+<span class="n">appointment</span><span class="p">.</span><span class="n">People</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="s">"Marcellus"</span><span class="p">);</span>
+
+<span class="c1">// now lets commit the pending update and push it out to Dropbox</span>
+<span class="k">await</span> <span class="n">datastore</span><span class="p">.</span><span class="n">Transaction</span><span class="p">(()=&gt;</span> <span class="p">{</span>
+  <span class="n">table</span><span class="p">.</span><span class="n">Update</span><span class="p">(</span><span class="n">appointment</span><span class="p">);</span>
+<span class="p">}).</span><span class="n">PushAsync</span><span class="p">();</span>
+</pre></div>
+
+<h4>
+<a name="saving-and-loading-local-datastore-snapshots" class="anchor" href="#saving-and-loading-local-datastore-snapshots"><span class="octicon octicon-link"></span></a>Saving and loading local datastore snapshots</h4>
+
+<div class="highlight highlight-c#"><pre><span class="c1">// the local state of a datastore can be saved to a streamWriter. In this case we</span>
+<span class="c1">// are choosing to save the local snapshot to a file on disk</span>
+<span class="k">using</span> <span class="p">(</span><span class="kt">var</span> <span class="n">stream</span> <span class="p">=</span> <span class="k">new</span> <span class="n">FileStream</span><span class="p">(</span><span class="s">"C:\\db.json"</span><span class="p">,</span><span class="n">FileMode</span><span class="p">.</span><span class="n">Create</span><span class="p">,</span><span class="n">FileAccess</span><span class="p">.</span><span class="n">Write</span><span class="p">))</span> <span class="p">{</span>
+  <span class="k">using</span> <span class="p">(</span><span class="n">StreamWriter</span> <span class="n">writer</span> <span class="p">=</span> <span class="k">new</span> <span class="n">StreamWriter</span><span class="p">(</span><span class="n">stream</span><span class="p">))</span>
+  <span class="p">{</span>
+    <span class="n">datastore</span><span class="p">.</span><span class="n">Save</span><span class="p">(</span><span class="n">writer</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="p">...</span>
+
+<span class="c1">// We can then reload the old state by loading this file</span>
+<span class="k">using</span> <span class="p">(</span><span class="kt">var</span> <span class="n">stream</span> <span class="p">=</span> <span class="k">new</span> <span class="n">FileStream</span><span class="p">(</span><span class="s">"C:\\db.json"</span><span class="p">,</span><span class="n">FileMode</span><span class="p">.</span><span class="n">Open</span><span class="p">,</span><span class="n">FileAccess</span><span class="p">.</span><span class="n">Read</span><span class="p">))</span> <span class="p">{</span>
+  <span class="k">using</span> <span class="p">(</span><span class="n">StreamReader</span> <span class="n">reader</span> <span class="p">=</span> <span class="k">new</span> <span class="n">StreamReader</span><span class="p">(</span><span class="n">stream</span><span class="p">))</span>
+  <span class="p">{</span>
+    <span class="n">datastore</span> <span class="p">=</span> <span class="n">manager</span><span class="p">.</span><span class="n">Load</span><span class="p">(</span><span class="n">reader</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+<h4>
+<a name="detecting-when-remote-changes-occur" class="anchor" href="#detecting-when-remote-changes-occur"><span class="octicon octicon-link"></span></a>Detecting when remote changes occur</h4>
+
+<div class="highlight highlight-c#"><pre><span class="k">while</span> <span class="p">(</span><span class="k">true</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// Waits for up to a minute or for a change to occur, whichever happens first</span>
+  <span class="k">if</span> <span class="p">(</span><span class="k">await</span> <span class="n">datastore</span><span class="p">.</span><span class="n">AwaitPullAsync</span><span class="p">())</span> <span class="p">{</span>
+    <span class="c1">// some remote changes occurred within the last minute and have been pulled in</span>
+    <span class="c1">// to the local snapshot</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="c1">// no changes occurred</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+<h4>
+<a name="the-fiddly-details-of-serializing-objects" class="anchor" href="#the-fiddly-details-of-serializing-objects"><span class="octicon octicon-link"></span></a>The fiddly details of serializing objects</h4>
+
+<p>Only public fields, and public readable/writable properties can be serialized. If you want a field to be ignored from serialization tag it with the <code>[BobbyTables.Ignore]</code> attribute.</p>
+
+<p>The dropbox datastore API only has support for the following datatypes so any objects that have fields with an unsupported datatype will not be able to be serialized or deserialized correctly (Lists or Arrays of any of the below data types are also supported)</p>
+
+<table>
+<thead><tr>
+<th>Dropbox datatype</th>
+<th align="left">.NET datatype</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>str</td>
+<td align="left">string</td>
+</tr>
+<tr>
+<td>number</td>
+<td align="left">float,Single,double</td>
+</tr>
+<tr>
+<td>int</td>
+<td align="left">Enums &amp; int/uint 16,32,64</td>
+</tr>
+<tr>
+<td>timestamp</td>
+<td align="left">DateTime</td>
+</tr>
+<tr>
+<td>blob</td>
+<td align="left">List&lt;byte&gt;, byte[]</td>
+</tr>
+</tbody>
+</table>
+
+<h4>
+<a name="Advanced options for handling object ids" class="anchor" href="#advanced-options-for-handling-object-ids"><span class="octicon octicon-link"></span></a>Advanced options for handling object ids</h4>
+
+<p>While BobbyTables will automatically look for an Id field on your objects when inserting and updating, it is possible to have more finegrained control over exactly which fields are used as the id for record objects. This can be useful in cases where you have domain objects that you cannot/do not wish to change in order to persist them to a datastore.</p>
+
+<p>The first way is to specify the id separately from the object when it is inserted or updated as shown below</p>
+
+<div class="highlight highlight-c#"><pre><span class="kt">var</span> <span class="n">table</span> <span class="p">=</span> <span class="n">datastore</span><span class="p">.</span><span class="n">GetTable</span><span class="p">&lt;</span><span class="n">Appointment</span><span class="p">&gt;(</span><span class="s">"appointments"</span><span class="p">);</span>
+<span class="kt">var</span> <span class="n">new_appointment</span> <span class="p">=</span> <span class="k">new</span> <span class="n">Appointment</span><span class="p">{ </span><span class="n">Time</span> <span class="p">=</span> <span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">()</span> <span class="p">};</span>
+
+<span class="n">table</span><span class="p">.</span><span class="n">Insert</span><span class="p">(</span><span class="s">"1"</span><span class="p">, </span><span class="n">new_appointment</span><span class="p">);</span>
+</pre></div>
+
+<p>The other option is to provide an id getter function which will return the value that should be used as the id for the object.</p>
+
+<div class="highlight highlight-c#"><pre><span class="kt">var</span> <span class="n">table</span> <span class="p">=</span> <span class="n">datastore</span><span class="p">.</span><span class="n">GetTable</span><span class="p">&lt;</span><span class="n">Appointment</span><span class="p">&gt;(</span><span class="s">"appointments"</span><span class="p">);</span>
+<span class="kt">var</span> <span class="n">new_appointment</span> <span class="p">=</span> <span class="k">new</span> <span class="n">Appointment</span><span class="p">{</span> <span class="n">Time</span> <span class="p">=</span> <span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">()</span> <span class="p">};</span>
+
+<span class="n">table</span><span class="p">.</span><span class="n">Insert</span><span class="p">(</span><span class="n">obj</span><span class="p"> =&gt; </span><span class="n">obj</span><span class="p">.</span><span class="n">Time</span><span class="p">.</span><span class="n">ToString</span><span class="p">(),</span> <span class="n">new_appointment</span><span class="p">);</span>
+</pre></div>
+
+      </section>
+      <footer>
+        <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+		          <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-3061240-17");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+           <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>	
+
+  </body>
+</html>
