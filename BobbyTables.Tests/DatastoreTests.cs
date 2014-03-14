@@ -551,34 +551,40 @@ namespace BobbyTables.Tests
 ]".Replace(" ", string.Empty).Replace("\t", string.Empty).Replace("\r\n", string.Empty)), Times.Exactly(1));
 		}
 
-        [Test]
-        public void Pull_WhenRemoteDoesNotHaveIdColumn_MapRowIdToId()
-        {
-            var mockGetRequest = new Mock<IApiRequest>();
-            mockGetRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""handle"": ""yyyy"", ""rev"": 28, ""created"": false}"));
-            mockGetRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+		[Test]
+		public void Pull_WhenRemoteDoesNotHaveIdColumn_MapRowIdToId()
+		{
+			var mockGetRequest = new Mock<IApiRequest>();
+			mockGetRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""handle"": ""yyyy"", ""rev"": 28, ""created"": false}"));
+			mockGetRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
 
-            var mockSnapshotRequest = new Mock<IApiRequest>();
-            mockSnapshotRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""rows"": [{""tid"": ""test_objects"", ""data"": {""ByteArray"": {""B"": ""_wEA""},""EnumValue"": {""I"":""1""},""UInt32Value"": {""I"": ""6""}, ""FloatValue"": 3.0, ""ByteList"": {""B"": ""AAH_""}, ""TimeValue"": {""T"": ""486086400000""}, ""LongValue"": {""I"": ""9""}, ""Int32Value"": {""I"": ""3""}, ""DoubleValue"": 1.0, ""IntList"": [{""I"": ""1""}, {""I"": ""2""}, {""I"": ""3""}], ""IntValue"": {""I"": ""1""}, ""Int16Value"": {""I"": ""2""}, ""UIntValue"": {""I"": ""4""}, ""UInt16Value"": {""I"": ""5""}, ""ULongValue"": {""I"": ""10""}, ""StringValue"": ""hello"", ""Int64Value"": {""I"": ""7""}, ""SingleValue"": 2.0, ""StringList"": [""hello"", ""world""], ""UInt64Value"": {""I"": ""8""}}, ""rowid"": ""1""}], ""rev"": 28}"));
-            mockSnapshotRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+			var mockSnapshotRequest = new Mock<IApiRequest>();
+			mockSnapshotRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""rows"": [{""tid"": ""test_objects"", ""data"": {""ByteArray"": {""B"": ""_wEA""},""EnumValue"": {""I"":""1""},""UInt32Value"": {""I"": ""6""}, ""FloatValue"": 3.0, ""ByteList"": {""B"": ""AAH_""}, ""TimeValue"": {""T"": ""486086400000""}, ""LongValue"": {""I"": ""9""}, ""Int32Value"": {""I"": ""3""}, ""DoubleValue"": 1.0, ""IntList"": [{""I"": ""1""}, {""I"": ""2""}, {""I"": ""3""}], ""IntValue"": {""I"": ""1""}, ""Int16Value"": {""I"": ""2""}, ""UIntValue"": {""I"": ""4""}, ""UInt16Value"": {""I"": ""5""}, ""ULongValue"": {""I"": ""10""}, ""StringValue"": ""hello"", ""Int64Value"": {""I"": ""7""}, ""SingleValue"": 2.0, ""StringList"": [""hello"", ""world""], ""UInt64Value"": {""I"": ""8""}}, ""rowid"": ""1""}], ""rev"": 28}"));
+			mockSnapshotRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
 
-            RequestFactory
-                .Setup(api => api.CreateRequest("POST", "get_or_create_datastore", Manager.ApiToken))
-                .Returns(mockGetRequest.Object);
+			RequestFactory
+				.Setup(api => api.CreateRequest("POST", "get_or_create_datastore", Manager.ApiToken))
+				.Returns(mockGetRequest.Object);
 
-            RequestFactory
-                .Setup(api => api.CreateRequest("POST", "get_snapshot", Manager.ApiToken))
-                .Returns(mockSnapshotRequest.Object);
+			RequestFactory
+				.Setup(api => api.CreateRequest("POST", "get_snapshot", Manager.ApiToken))
+				.Returns(mockSnapshotRequest.Object);
 
-            var db = Manager.GetOrCreate("default");
-            db.Pull();
+			var db = Manager.GetOrCreate("default");
+			db.Pull();
 
-            var table = db.GetTable<TestObject>("test_objects");
-            var item = table.Get("1");
+			var table = db.GetTable<TestObject>("test_objects");
 
-            Assert.IsNotNull(item);
-            Assert.AreEqual(item.Id, "1");
-        }
+			// use the implicit id setter which will populate any public id properties or fields
+			var item = table.Get("1");
+			Assert.IsNotNull(item);
+			Assert.AreEqual("1", item.Id);
+
+			//also check that if an explicit setter is set, that it is used as well
+			item = table.Get((t,value)=>t.Id = value + "2","1");
+			Assert.IsNotNull(item);
+			Assert.AreEqual("12", item.Id);
+		}
 
 		[Test]
 		public void AwaitPull()

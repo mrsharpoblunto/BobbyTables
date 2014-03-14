@@ -297,60 +297,50 @@ namespace BobbyTables
 			return false;
 		}
 
-        public T Get<T>(string id)
-          where T : class, new()
-        {
-            Row row;
-            if (_rows.TryGetValue(id, out row) && row.Data != null)
-            {
-                bool rowDataHasIdProperty = row.Data.GetValue("Id") != null;
+		public T Get<T>(IdSetter idSetter,string id)
+		  where T : class, new()
+		{
+			Row row;
+			if (_rows.TryGetValue(id, out row) && row.Data != null)
+			{
+				T obj = new T();
+				idSetter( obj, id);
 
-                T obj = new T();
-                foreach (var field in obj.GetType().GetFields())
-                {
-                    if (field.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0)
-                    {
-                        var data = row.Data[field.Name];
-                        if (data != null)
-                        {
-                            field.SetValue(obj, DeserializeValue(data, field.FieldType));
-                        }
+				foreach (var field in obj.GetType().GetFields())
+				{
+					if (field.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0)
+					{
+						var data = row.Data[field.Name];
+						if (data != null)
+						{
+							field.SetValue(obj, DeserializeValue(data, field.FieldType));
+						}
+					}
+				}
+				foreach (var prop in obj.GetType().GetProperties())
+				{
+					// we are only interested in read/writable fields
+					if (prop.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0 && prop.CanRead && prop.CanWrite)
+					{
+						var data = row.Data[prop.Name];
+						if (data != null)
+						{
+							prop.SetValue(obj, DeserializeValue(data, prop.PropertyType), null);
+						}
+					}
+				}
 
-                        if (!rowDataHasIdProperty && field.Name.Equals("Id"))
-                        {
-                            field.SetValue(obj, DeserializeValue(id, field.FieldType));
-                        }
-                    }
-                }
-                foreach (var prop in obj.GetType().GetProperties())
-                {
-                    // we are only interested in read/writable fields
-                    if (prop.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0 && prop.CanRead && prop.CanWrite)
-                    {
-                        var data = row.Data[prop.Name];
-                        if (data != null)
-                        {
-                            prop.SetValue(obj, DeserializeValue(data, prop.PropertyType), null);
-                        }
+				return obj;
+			}
+			return default(T);
+		}
 
-                        if (!rowDataHasIdProperty && prop.Name.Equals("Id"))
-                        {
-                            prop.SetValue(obj, DeserializeValue(id, prop.PropertyType), null);
-                        }
-                    }
-                }
-
-                return obj;
-            }
-            return default(T);
-        }
-
-		public IEnumerable<T> GetAll<T>()
+		public IEnumerable<T> GetAll<T>(IdSetter idSetter)
 			where T : class, new()
 		{
 			foreach (var kvp in _rows)
 			{
-				yield return Get<T>(kvp.Key);
+				yield return Get<T>(idSetter,kvp.Key);
 			}
 		}
 
@@ -1081,7 +1071,19 @@ namespace BobbyTables
 		/// <returns>The constructed row object</returns>
 		public T Get(string id)
 		{
-			return _table.Get<T>(id);
+			return _table.Get<T>(SetId,id);
+		}
+
+		/// <summary>
+		/// Get a row from the table and convert it into the specified object type. Will fail
+		/// if the object cannot be created from the supplied row data
+		/// </summary>
+		/// <param name="idSetter">A function that will be called on the object to populate the objects id field</param>
+		/// <param name="id">The row id where the data should be retrieved from</param>
+		/// <returns>The constructed row object</returns>
+		public T Get(IdSetter idSetter,string id)
+		{
+			return _table.Get<T>((obj, value) => idSetter(obj as T, value), id);
 		}
 
 		#region IEnumerable<T> Members
@@ -1092,7 +1094,17 @@ namespace BobbyTables
 		/// <returns></returns>
 		public IEnumerator<T> GetEnumerator()
 		{
-			return _table.GetAll<T>().GetEnumerator();
+			return _table.GetAll<T>(SetId).GetEnumerator();
+		}
+
+		/// <summary>
+		/// Gets an enumerator containing all the objects in this table
+		/// </summary>
+		/// <param name="idSetter">A function that will be called on all objects to populate the objects id field</param>
+		/// <returns></returns>
+		public IEnumerator<T> GetEnumerator(IdSetter idSetter)
+		{
+			return _table.GetAll<T>((obj, value) => idSetter(obj as T,value)).GetEnumerator();
 		}
 
 		#endregion
@@ -1101,7 +1113,7 @@ namespace BobbyTables
 
 		IEnumerator IEnumerable.GetEnumerator()
 		{
-			return _table.GetAll<T>().GetEnumerator();
+			return _table.GetAll<T>(SetId).GetEnumerator();
 		}
 
 		#endregion
