@@ -257,17 +257,19 @@ namespace BobbyTables
 			JObject data = new JObject();
 			foreach (var field in insert.GetType().GetFields())
 			{
-				if (field.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0)
+				object fieldValue = field.GetValue(insert);
+				if (field.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0 && fieldValue != null)
 				{
-					data[field.Name] = SerializeValue(field.GetValue(insert));
+					data[field.Name] = SerializeValue(fieldValue);
 				}
 			}
 			foreach (var prop in insert.GetType().GetProperties())
 			{
+				object propValue = prop.GetValue(insert, null);
 				// we are only interested in read/writable fields
-				if (prop.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0 && prop.CanRead && prop.CanWrite)
+				if (prop.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0 && prop.CanRead && prop.CanWrite && propValue != null)
 				{
-					data[prop.Name] = SerializeValue(prop.GetValue(insert,null));
+					data[prop.Name] = SerializeValue(propValue);
 				}
 			}
 			change.Add(data);
@@ -368,22 +370,24 @@ namespace BobbyTables
 
 				foreach (var field in update.GetType().GetFields())
 				{
+					object fieldValue = field.GetValue(update);
 					if (field.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0)
 					{
-						var value = SerializeValue(field.GetValue(update));
+						JToken value = fieldValue != null ? SerializeValue(fieldValue) : null;
 						var operations = DetermineOperations(row.Data, field.Name, value);
 						change = AddPendingOperations(field.Name, value, operations, change);
-					}
+					}                
 				}
 				foreach (var prop in update.GetType().GetProperties())
 				{
+					object propValue = prop.GetValue(update, null);
 					// we are only interested in read/writable fields
 					if (prop.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0 && prop.CanRead && prop.CanWrite)
 					{
-						var value = SerializeValue(prop.GetValue(update,null));
+						var value = propValue != null ? SerializeValue(propValue) : null;
 						var operations = DetermineOperations(row.Data, prop.Name, value);
 						change = AddPendingOperations(prop.Name, value, operations, change);
-					}
+					}                  
 				}
 
 				if (change.Last.HasValues)
@@ -429,99 +433,109 @@ namespace BobbyTables
 		{
 			List<JArray> operations = new List<JArray>();
 			JToken originalValue = originalData[name];
-			if (originalData[name] == null)
+			if (value != null)
 			{
-				// the property doesn't currently exist, so its either a PUT or LIST_CREATE
-				if (value.Type == JTokenType.Array && (value as JArray).Count == 0)
+				if (originalData[name] == null)
 				{
-					// create an empty list property
-					var op = new JArray();
-					op.Add("LC");
-					operations.Add(op);
+					// the property doesn't currently exist, so its either a PUT or LIST_CREATE
+					if (value.Type == JTokenType.Array && (value as JArray).Count == 0)
+					{
+						// create an empty list property
+						var op = new JArray();
+						op.Add("LC");
+						operations.Add(op);
+					}
+					else
+					{
+						var op = new JArray();
+						op.Add("P");
+						operations.Add(op);
+					}
 				}
 				else
 				{
-					var op = new JArray();
-					op.Add("P");
-					operations.Add(op);
+					// the property exists - now we want to see if its the same or not
+					if (originalValue.Type == JTokenType.Array && value.Type == JTokenType.Array)
+					{
+						// for array values we want to try and be more efficient than just replacing
+						// the entire list - so we'll try to identify just the elements that were
+						// removed/updated/added to the list instead using a diff algorithm
+
+						JArray original = originalValue as JArray;
+						JArray update = value as JArray;
+
+						// get the longest common subsequence between the two lists
+						JArray lcs = ComputeLCS(original, update);
+
+						int lcsIndex = 0;
+						//anything present in the update but not in the LCS is a new addition
+						for (int i = 0; i < update.Count; ++i)
+						{
+							if (lcsIndex >= lcs.Count || !SerializedValuesEqual(update[i], lcs[lcsIndex]))
+							{
+								var op = new JArray();
+								op.Add("LI");
+								op.Add(i);
+								op.Add(update[i]);
+								operations.Add(op);
+							}
+							else
+							{
+								++lcsIndex;
+							}
+						}
+
+						lcsIndex = 0;
+						//anything present in the original, but not in the LCS is a removal
+						for (int i = 0; i < original.Count; ++i)
+						{
+							if (lcsIndex >= lcs.Count || !SerializedValuesEqual(original[i], lcs[lcsIndex]))
+							{
+								var op = new JArray();
+								op.Add("LD");
+								op.Add(i);
+								operations.Add(op);
+							}
+							else
+							{
+								++lcsIndex;
+							}
+						}
+
+						// apply operations in reverse order so the indexes don't get messed up as
+						// the lists content changes
+						operations.Sort((a, b) =>
+						{
+							var cmp = a[1].Value<int>().CompareTo(b[1].Value<int>()) * -1;
+							if (cmp == 0)
+							{
+								// deletes should go ahead of inserts so we 
+								// don't delete entries we have just added
+								return a[0].Value<string>() == "LD" ? -1 : 1;
+							}
+							return cmp;
+						});
+					}
+					else
+					{
+						// if we're not dealing with arrays, then we can just compare and put in the 
+						// new value if necessary
+						if (!SerializedValuesEqual(originalValue, value))
+						{
+							var op = new JArray();
+							op.Add("P");
+							op.Add(value);
+							operations.Add(op);
+						}
+					}
 				}
 			}
 			else
 			{
-				// the property exists - now we want to see if its the same or not
-				if (originalValue.Type == JTokenType.Array && value.Type == JTokenType.Array)
-				{
-					// for array values we want to try and be more efficient than just replacing
-					// the entire list - so we'll try to identify just the elements that were
-					// removed/updated/added to the list instead using a diff algorithm
-
-					JArray original = originalValue as JArray;
-					JArray update = value as JArray;
-
-					// get the longest common subsequence between the two lists
-					JArray lcs = ComputeLCS(original, update);
-
-					int lcsIndex = 0;
-					//anything present in the update but not in the LCS is a new addition
-					for (int i = 0; i < update.Count; ++i)
-					{
-						if (lcsIndex >= lcs.Count || !SerializedValuesEqual(update[i], lcs[lcsIndex]))
-						{
-							var op = new JArray();
-							op.Add("LI");
-							op.Add(i);
-							op.Add(update[i]);
-							operations.Add(op);
-						}
-						else
-						{
-							++lcsIndex;
-						}
-					}
-
-					lcsIndex = 0;
-					//anything present in the original, but not in the LCS is a removal
-					for (int i = 0; i < original.Count; ++i)
-					{
-						if (lcsIndex >= lcs.Count || !SerializedValuesEqual(original[i], lcs[lcsIndex]))
-						{
-							var op = new JArray();
-							op.Add("LD");
-							op.Add(i);
-							operations.Add(op);
-						}
-						else
-						{
-							++lcsIndex;
-						}
-					}
-
-					// apply operations in reverse order so the indexes don't get messed up as
-					// the lists content changes
-					operations.Sort((a, b) =>
-					{
-						var cmp = a[1].Value<int>().CompareTo(b[1].Value<int>()) * -1;
-						if (cmp == 0)
-						{
-							// deletes should go ahead of inserts so we 
-							// don't delete entries we have just added
-							return a[0].Value<string>() == "LD" ? -1 : 1;
-						}
-						return cmp;
-					});
-				}
-				else
-				{
-					// if we're not dealing with arrays, then we can just compare and put in the 
-					// new value if necessary
-					if (!SerializedValuesEqual(originalValue, value))
-					{
-						var op = new JArray();
-						op.Add("P");
-						op.Add(value);
-						operations.Add(op);
-					}
-				}
+				// value is null, It's a delete operation
+				var op = new JArray();
+				op.Add("D");
+				operations.Add(op);
 			}
 			return operations;
 		}
@@ -796,15 +810,15 @@ namespace BobbyTables
 					{
 						return Enum.ToObject(type, value["I"].Value<ulong>());
 					}
-					if (type == typeof(int))
+					if (type == typeof(int) || type == typeof(int?))
 					{
 						return value["I"].Value<int>();
 					}
-					else if (type == typeof(Int16))
+					else if (type == typeof(Int16) || type == typeof(Int16?))
 					{
 						return value["I"].Value<Int16>();
 					}
-					else if (type == typeof(UInt16))
+					else if (type == typeof(UInt16) || type == typeof(UInt16?))
 					{
 						return value["I"].Value<UInt16>();
 					}
@@ -812,15 +826,15 @@ namespace BobbyTables
 					{
 						return value["I"].Value<int>();
 					}
-					else if (type == typeof(uint))
+					else if (type == typeof(uint) || type == typeof(uint?))
 					{
 						return value["I"].Value<uint>();
 					}
-					else if (type == typeof(long))
+					else if (type == typeof(long) || type == typeof(long?))
 					{
 						return value["I"].Value<long>();
 					}
-					else if (type == typeof(ulong))
+					else if (type == typeof(ulong) || type == typeof(ulong?))
 					{
 						return value["I"].Value<ulong>();
 					}
@@ -829,7 +843,7 @@ namespace BobbyTables
 				else if (value["T"] != null)
 				{
 					//DateTime values
-					if (type == typeof(DateTime))
+					if (type == typeof(DateTime) || type == typeof(DateTime?))
 					{
 						return (new DateTime(1970, 1, 1)).AddMilliseconds(value["T"].Value<Int64>());
 					}

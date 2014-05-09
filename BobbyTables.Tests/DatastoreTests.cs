@@ -23,7 +23,7 @@ namespace BobbyTables.Tests
 	{
 		public TestObject()
 		{
-			_privateFieldsIgnored = 1;
+			_privateFieldsIgnored = 1;       
 		}
 		public string Id;
 
@@ -62,6 +62,9 @@ namespace BobbyTables.Tests
 		public byte[] ByteArray;
 		public List<string> StringList = new List<string>();
 		public List<int> IntList = new List<int>();
+
+        public int? nullableField;
+        public int? NullableProperty { get; set; }
 	}
 
 	public class NoIdObject: Record
@@ -427,7 +430,7 @@ namespace BobbyTables.Tests
 			mockGetRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
 
 			var mockSnapshotRequest = new Mock<IApiRequest>();
-			mockSnapshotRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""rows"": [{""tid"": ""test_objects"", ""data"": {""ByteArray"": {""B"": ""_wEA""},""EnumValue"": {""I"":""1""},""UInt32Value"": {""I"": ""6""}, ""FloatValue"": 3.0, ""ByteList"": {""B"": ""AAH_""}, ""TimeValue"": {""T"": ""486086400000""}, ""LongValue"": {""I"": ""9""}, ""Int32Value"": {""I"": ""3""}, ""DoubleValue"": 1.0, ""IntList"": [{""I"": ""1""}, {""I"": ""2""}, {""I"": ""3""}], ""IntValue"": {""I"": ""1""}, ""Int16Value"": {""I"": ""2""}, ""UIntValue"": {""I"": ""4""}, ""UInt16Value"": {""I"": ""5""}, ""ULongValue"": {""I"": ""10""}, ""StringValue"": ""hello"", ""Int64Value"": {""I"": ""7""}, ""Id"": ""1"", ""SingleValue"": 2.0, ""StringList"": [""hello"", ""world""], ""UInt64Value"": {""I"": ""8""}}, ""rowid"": ""1""}], ""rev"": 28}"));
+            mockSnapshotRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""rows"": [{""tid"": ""test_objects"", ""data"": {""ByteArray"": {""B"": ""_wEA""},""EnumValue"": {""I"":""1""},""UInt32Value"": {""I"": ""6""}, ""FloatValue"": 3.0, ""ByteList"": {""B"": ""AAH_""}, ""TimeValue"": {""T"": ""486086400000""}, ""LongValue"": {""I"": ""9""}, ""Int32Value"": {""I"": ""3""}, ""DoubleValue"": 1.0, ""IntList"": [{""I"": ""1""}, {""I"": ""2""}, {""I"": ""3""}], ""IntValue"": {""I"": ""1""}, ""Int16Value"": {""I"": ""2""}, ""UIntValue"": {""I"": ""4""}, ""UInt16Value"": {""I"": ""5""}, ""ULongValue"": {""I"": ""10""}, ""StringValue"": ""hello"", ""Int64Value"": {""I"": ""7""}, ""Id"": ""1"", ""SingleValue"": 2.0, ""StringList"": [""hello"", ""world""], ""UInt64Value"": {""I"": ""8""}, ""nullableField"": {""I"": ""20""}, ""NullableProperty"": {""I"": ""21""}},""rowid"": ""1""}], ""rev"": 28}"));
 			mockSnapshotRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
 
 			var mockPushRequest = new Mock<IApiRequest>();
@@ -464,6 +467,8 @@ namespace BobbyTables.Tests
 			obj.IntList.RemoveAt(2);
 			obj.IntList.Add(4);
 			obj.IntList.Add(5);
+            obj.nullableField = null;
+            obj.NullableProperty = null;
 
 			Assert.IsTrue(table.Update(obj));
 			Assert.IsFalse(table.Update(obj));
@@ -510,6 +515,8 @@ namespace BobbyTables.Tests
 			{
 				Assert.AreEqual(obj.IntList[i], foundAgain.IntList[i]);
 			}
+            Assert.IsNull(obj.NullableProperty);
+            Assert.IsNull(obj.nullableField);
 
 			// check that we pushed the correct change delta to dropbox
 			mockPushRequest.Verify(req => req.AddParam("handle", "yyyy"), Times.Exactly(1));
@@ -540,14 +547,11 @@ namespace BobbyTables.Tests
     [""U"", ""test_objects"", ""1"", {
         ""IntList"": [""LD"", 2]
     }],
-    [""U"", ""test_objects"", ""1"", {
-        ""IntList"": [""LI"", 2, {
-            ""I"": ""4""
-        }],
-		""EnumValue"":[""P"", {
-            ""I"":""2""
-        }]
-    }]
+    [""U"",""test_objects"",""1"",{
+        ""IntList"":[""LI"",2,{""I"":""4""}],
+        ""nullableField"":[""D""],
+        ""EnumValue"":[""P"",{""I"":""2""}],
+        ""NullableProperty"":[""D""]}]
 ]".Replace(" ", string.Empty).Replace("\t", string.Empty).Replace("\r\n", string.Empty)), Times.Exactly(1));
 		}
 
@@ -1129,7 +1133,7 @@ namespace BobbyTables.Tests
 
 
 		[Test]
-		public void SerializationErrors()
+		public void SerializationErrors_TypesNotSupportedInDropboxDatastore()
 		{
 			var mockGetRequest = new Mock<IApiRequest>();
 			mockGetRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""handle"": ""yyyy"", ""rev"": 1, ""created"": false}"));
@@ -1156,21 +1160,7 @@ namespace BobbyTables.Tests
 				.Returns(mockPushRequest.Object);
 
 			var db = Manager.GetOrCreate("default");
-			db.Pull();
-
-			var table = db.GetTable<TestObject>("test_objects");
-
-			var obj = new TestObject
-			{
-				Id = "1",
-			};
-
-			// can't insert objects which have null field values
-			// as dropbox can't store null values
-			Assert.Catch(typeof(ArgumentException) ,()=>
-			{
-				table.Insert(obj);
-			});
+			db.Pull();		
 
 			var table1 = db.GetTable<UnserializableObject>("invalid_objects");
 
@@ -1183,5 +1173,46 @@ namespace BobbyTables.Tests
 				table1.Insert("2", new UnserializableObject());
 			});
 		}
+
+        [Test]
+        public void CanStoreObjectsWithNullValues()
+        {
+            var mockGetRequest = new Mock<IApiRequest>();
+            mockGetRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""handle"": ""yyyy"", ""rev"": 1, ""created"": false}"));
+            mockGetRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+            var mockSnapshotRequest = new Mock<IApiRequest>();
+            mockSnapshotRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""rows"": [], ""rev"": 1}"));
+            mockSnapshotRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+            var mockPushRequest = new Mock<IApiRequest>();
+            mockPushRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""rev"": 2}"));
+            mockPushRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+            RequestFactory
+                .Setup(api => api.CreateRequest("POST", "get_or_create_datastore", Manager.ApiToken))
+                .Returns(mockGetRequest.Object);
+
+            RequestFactory
+                .Setup(api => api.CreateRequest("POST", "get_snapshot", Manager.ApiToken))
+                .Returns(mockSnapshotRequest.Object);
+
+            RequestFactory
+                .Setup(api => api.CreateRequest("POST", "put_delta", Manager.ApiToken))
+                .Returns(mockPushRequest.Object);
+
+            var db = Manager.GetOrCreate("default");
+            db.Pull();
+
+            var table = db.GetTable<TestObject>("test_objects");
+
+            var obj = new TestObject
+            {
+                Id = "1",
+            };
+
+            table.Insert(obj);
+            string a = "";
+        }
 	}
 }
