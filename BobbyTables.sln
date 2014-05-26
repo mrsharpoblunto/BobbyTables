@@ -1,6 +1,14 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30110.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7529025A-70A2-4389-B3A1-342F2D37CA3B}"
+	ProjectSection(SolutionItems) = preProject
+		LICENSE.txt = LICENSE.txt
+		Package.nuspec = Package.nuspec
+	EndProjectSection
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BobbyTables.net20", "BobbyTables\BobbyTables.net20.csproj", "{8385E49B-60AB-4C43-BF59-64E28CAC4FAA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BobbyTables.Tests", "BobbyTables.Tests\BobbyTables.Tests.csproj", "{F4CB8875-C506-4DA1-BC0E-D1DBD5439540}"
@@ -8,14 +16,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BobbyTables.portable", "BobbyTables.Portable\BobbyTables.portable.csproj", "{9DD5B4DB-9266-4209-8CD2-6BDA932A63CD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BobbyTables.net45", "BobbyTables.Net45\BobbyTables.net45.csproj", "{1668CC39-F1C0-4765-A5ED-425CE67A3920}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BobbyTables.net40", "BobbyTables.net40\BobbyTables.net40.csproj", "{E5B745C1-760D-4A3F-8ADD-0495253B1B1E}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7529025A-70A2-4389-B3A1-342F2D37CA3B}"
-	ProjectSection(SolutionItems) = preProject
-		LICENSE.txt = LICENSE.txt
-		Package.nuspec = Package.nuspec
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,10 +39,6 @@ Global
 		{1668CC39-F1C0-4765-A5ED-425CE67A3920}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1668CC39-F1C0-4765-A5ED-425CE67A3920}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1668CC39-F1C0-4765-A5ED-425CE67A3920}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E5B745C1-760D-4A3F-8ADD-0495253B1B1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E5B745C1-760D-4A3F-8ADD-0495253B1B1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E5B745C1-760D-4A3F-8ADD-0495253B1B1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E5B745C1-760D-4A3F-8ADD-0495253B1B1E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

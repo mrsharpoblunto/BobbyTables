@@ -257,19 +257,25 @@ namespace BobbyTables
 			JObject data = new JObject();
 			foreach (var field in insert.GetType().GetFields())
 			{
-				object fieldValue = field.GetValue(insert);
-				if (field.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0 && fieldValue != null)
+				if (field.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0) 
 				{
-					data[field.Name] = SerializeValue(fieldValue);
+					object fieldValue = field.GetValue(insert);
+					if (fieldValue != null)
+					{
+						data[field.Name] = SerializeValue(fieldValue);
+					}
 				}
 			}
 			foreach (var prop in insert.GetType().GetProperties())
 			{
-				object propValue = prop.GetValue(insert, null);
-				// we are only interested in read/writable fields
-				if (prop.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0 && prop.CanRead && prop.CanWrite && propValue != null)
+				if (prop.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0)
 				{
-					data[prop.Name] = SerializeValue(propValue);
+					object propValue = prop.GetValue(insert, null);
+					// we are only interested in read/writable fields
+					if (prop.CanRead && prop.CanWrite && propValue != null)
+					{
+						data[prop.Name] = SerializeValue(propValue);
+					}
 				}
 			}
 			change.Add(data);
@@ -370,9 +376,9 @@ namespace BobbyTables
 
 				foreach (var field in update.GetType().GetFields())
 				{
-					object fieldValue = field.GetValue(update);
 					if (field.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0)
 					{
+						object fieldValue = field.GetValue(update);
 						JToken value = fieldValue != null ? SerializeValue(fieldValue) : null;
 						var operations = DetermineOperations(row.Data, field.Name, value);
 						change = AddPendingOperations(field.Name, value, operations, change);
@@ -380,10 +386,10 @@ namespace BobbyTables
 				}
 				foreach (var prop in update.GetType().GetProperties())
 				{
-					object propValue = prop.GetValue(update, null);
 					// we are only interested in read/writable fields
 					if (prop.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0 && prop.CanRead && prop.CanWrite)
 					{
+						object propValue = prop.GetValue(update, null);
 						var value = propValue != null ? SerializeValue(propValue) : null;
 						var operations = DetermineOperations(row.Data, prop.Name, value);
 						change = AddPendingOperations(prop.Name, value, operations, change);
@@ -438,17 +444,32 @@ namespace BobbyTables
 				if (originalData[name] == null)
 				{
 					// the property doesn't currently exist, so its either a PUT or LIST_CREATE
-					if (value.Type == JTokenType.Array && (value as JArray).Count == 0)
+					if (value.Type == JTokenType.Array )
 					{
 						// create an empty list property
 						var op = new JArray();
 						op.Add("LC");
 						operations.Add(op);
+
+						if ((value as JArray).Count != 0)
+						{
+							// create a list containing values
+							JArray listValue = value as JArray;
+							for (var i = 0; i < listValue.Count; ++i)
+							{
+								op = new JArray();
+								op.Add("LP");
+								op.Add(i);
+								op.Add(listValue[i]);
+								operations.Add(op);
+							}
+						}
 					}
 					else
 					{
 						var op = new JArray();
 						op.Add("P");
+						op.Add(value);
 						operations.Add(op);
 					}
 				}
@@ -530,9 +551,9 @@ namespace BobbyTables
 					}
 				}
 			}
-			else
+			else if ( originalData[name] != null )
 			{
-				// value is null, It's a delete operation
+				// value is null but it was not previously, It's a delete operation
 				var op = new JArray();
 				op.Add("D");
 				operations.Add(op);

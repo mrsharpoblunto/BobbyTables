@@ -63,8 +63,15 @@ namespace BobbyTables.Tests
 		public List<string> StringList = new List<string>();
 		public List<int> IntList = new List<int>();
 
-        public int? nullableField;
-        public int? NullableProperty { get; set; }
+		public int? NullableField;
+		public int? NullableProperty { get; set; }
+	}
+
+	public class NullableObject
+	{
+		public string Id;
+		public int? NullableField;
+		public int? NullableProperty { get; set; }
 	}
 
 	public class NoIdObject: Record
@@ -430,7 +437,7 @@ namespace BobbyTables.Tests
 			mockGetRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
 
 			var mockSnapshotRequest = new Mock<IApiRequest>();
-            mockSnapshotRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""rows"": [{""tid"": ""test_objects"", ""data"": {""ByteArray"": {""B"": ""_wEA""},""EnumValue"": {""I"":""1""},""UInt32Value"": {""I"": ""6""}, ""FloatValue"": 3.0, ""ByteList"": {""B"": ""AAH_""}, ""TimeValue"": {""T"": ""486086400000""}, ""LongValue"": {""I"": ""9""}, ""Int32Value"": {""I"": ""3""}, ""DoubleValue"": 1.0, ""IntList"": [{""I"": ""1""}, {""I"": ""2""}, {""I"": ""3""}], ""IntValue"": {""I"": ""1""}, ""Int16Value"": {""I"": ""2""}, ""UIntValue"": {""I"": ""4""}, ""UInt16Value"": {""I"": ""5""}, ""ULongValue"": {""I"": ""10""}, ""StringValue"": ""hello"", ""Int64Value"": {""I"": ""7""}, ""Id"": ""1"", ""SingleValue"": 2.0, ""StringList"": [""hello"", ""world""], ""UInt64Value"": {""I"": ""8""}, ""nullableField"": {""I"": ""20""}, ""NullableProperty"": {""I"": ""21""}},""rowid"": ""1""}], ""rev"": 28}"));
+            mockSnapshotRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""rows"": [{""tid"": ""test_objects"", ""data"": {""ByteArray"": {""B"": ""_wEA""},""EnumValue"": {""I"":""1""},""UInt32Value"": {""I"": ""6""}, ""FloatValue"": 3.0, ""ByteList"": {""B"": ""AAH_""}, ""TimeValue"": {""T"": ""486086400000""}, ""LongValue"": {""I"": ""9""}, ""Int32Value"": {""I"": ""3""}, ""DoubleValue"": 1.0, ""IntList"": [{""I"": ""1""}, {""I"": ""2""}, {""I"": ""3""}], ""IntValue"": {""I"": ""1""}, ""Int16Value"": {""I"": ""2""}, ""UIntValue"": {""I"": ""4""}, ""UInt16Value"": {""I"": ""5""}, ""ULongValue"": {""I"": ""10""}, ""StringValue"": ""hello"", ""Int64Value"": {""I"": ""7""}, ""Id"": ""1"", ""SingleValue"": 2.0, ""StringList"": [""hello"", ""world""], ""UInt64Value"": {""I"": ""8""}, ""NullableField"": {""I"": ""20""}, ""NullableProperty"": {""I"": ""21""}},""rowid"": ""1""}], ""rev"": 28}"));
 			mockSnapshotRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
 
 			var mockPushRequest = new Mock<IApiRequest>();
@@ -467,8 +474,8 @@ namespace BobbyTables.Tests
 			obj.IntList.RemoveAt(2);
 			obj.IntList.Add(4);
 			obj.IntList.Add(5);
-            obj.nullableField = null;
-            obj.NullableProperty = null;
+			obj.NullableField = null;
+			obj.NullableProperty = null;
 
 			Assert.IsTrue(table.Update(obj));
 			Assert.IsFalse(table.Update(obj));
@@ -516,7 +523,7 @@ namespace BobbyTables.Tests
 				Assert.AreEqual(obj.IntList[i], foundAgain.IntList[i]);
 			}
             Assert.IsNull(obj.NullableProperty);
-            Assert.IsNull(obj.nullableField);
+            Assert.IsNull(obj.NullableField);
 
 			// check that we pushed the correct change delta to dropbox
 			mockPushRequest.Verify(req => req.AddParam("handle", "yyyy"), Times.Exactly(1));
@@ -549,7 +556,7 @@ namespace BobbyTables.Tests
     }],
     [""U"",""test_objects"",""1"",{
         ""IntList"":[""LI"",2,{""I"":""4""}],
-        ""nullableField"":[""D""],
+        ""NullableField"":[""D""],
         ""EnumValue"":[""P"",{""I"":""2""}],
         ""NullableProperty"":[""D""]}]
 ]".Replace(" ", string.Empty).Replace("\t", string.Empty).Replace("\r\n", string.Empty)), Times.Exactly(1));
@@ -1133,7 +1140,7 @@ namespace BobbyTables.Tests
 
 
 		[Test]
-		public void SerializationErrors_TypesNotSupportedInDropboxDatastore()
+		public void CannotSerializeTypesNotSupportedInDropboxDatastore()
 		{
 			var mockGetRequest = new Mock<IApiRequest>();
 			mockGetRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""handle"": ""yyyy"", ""rev"": 1, ""created"": false}"));
@@ -1175,7 +1182,7 @@ namespace BobbyTables.Tests
 		}
 
         [Test]
-        public void CanStoreObjectsWithNullValues()
+        public void CanSetAndUnsetNullableValues()
         {
             var mockGetRequest = new Mock<IApiRequest>();
             mockGetRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""handle"": ""yyyy"", ""rev"": 1, ""created"": false}"));
@@ -1204,15 +1211,49 @@ namespace BobbyTables.Tests
             var db = Manager.GetOrCreate("default");
             db.Pull();
 
-            var table = db.GetTable<TestObject>("test_objects");
+			var table = db.GetTable<NullableObject>("test_objects");
+			
+			// add an object with all non id values nulled out.
+			var obj = new NullableObject { Id = "1" };
+            Assert.IsTrue(table.Insert(obj));
+			Assert.IsTrue(db.Push());
 
-            var obj = new TestObject
-            {
-                Id = "1",
-            };
+			string expectedRequest = (@"[[""I"",""test_objects"",""1"",{""Id"":""1""}]]").Replace(" ", string.Empty).Replace("\r\n", string.Empty);
 
-            table.Insert(obj);
-            string a = "";
+			// check that we pushed the object with no property values to dropbox
+			mockPushRequest.Verify(req => req.AddParam("handle", "yyyy"), Times.Exactly(1));
+			mockPushRequest.Verify(req => req.AddParam("rev", "1"), Times.Exactly(1));
+			mockPushRequest.Verify(req => req.AddParam("changes", expectedRequest), Times.Exactly(1));
+			mockPushRequest.ResetCalls();
+
+			// now we'll set the nullable property values
+			obj.NullableField = 1;
+			obj.NullableProperty = 2;
+			Assert.IsTrue(table.Update(obj));
+			Assert.IsTrue(db.Push());
+
+			// check the values were inserted into dropbox
+			expectedRequest = (@"[[""U"",""test_objects"",""1"",{""NullableField"":[""P"",{""I"":""1""}],""NullableProperty"":[""P"",{""I"":""2""}]}]]").Replace(" ", string.Empty).Replace("\r\n", string.Empty);
+
+			// check that we pushed the correct values to dropbox
+			mockPushRequest.Verify(req => req.AddParam("handle", "yyyy"), Times.Exactly(1));
+			mockPushRequest.Verify(req => req.AddParam("rev", "2"), Times.Exactly(1));
+			mockPushRequest.Verify(req => req.AddParam("changes", expectedRequest), Times.Exactly(1));
+			mockPushRequest.ResetCalls();
+
+			// now we'll unset the nullable property values
+			obj.NullableField = null;
+			obj.NullableProperty = null;
+			Assert.IsTrue(table.Update(obj));
+			Assert.IsTrue(db.Push());
+
+			// check the values were removed from dropbox
+			expectedRequest = (@"[[""U"",""test_objects"",""1"",{""NullableField"":[""D""],""NullableProperty"":[""D""]}]]").Replace(" ", string.Empty).Replace("\r\n", string.Empty);
+
+			// check that we pushed the correct values to dropbox
+			mockPushRequest.Verify(req => req.AddParam("handle", "yyyy"), Times.Exactly(1));
+			mockPushRequest.Verify(req => req.AddParam("rev", "2"), Times.Exactly(1));
+			mockPushRequest.Verify(req => req.AddParam("changes", expectedRequest), Times.Exactly(1));
         }
 	}
 }
