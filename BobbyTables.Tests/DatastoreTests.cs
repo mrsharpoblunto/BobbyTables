@@ -1255,5 +1255,273 @@ namespace BobbyTables.Tests
 			mockPushRequest.Verify(req => req.AddParam("rev", "2"), Times.Exactly(1));
 			mockPushRequest.Verify(req => req.AddParam("changes", expectedRequest), Times.Exactly(1));
         }
+
+        public class NullableDoubleObject
+        {
+            public string Id { get; set; }
+            public double? NullableField;
+            public double? NullableProperty { get; set; }
+        }
+
+        [Test]
+        public void CanDeserializeJsonTypeFloatToTypeNullableDouble()
+        {
+            var mockGetRequest = new Mock<IApiRequest>();
+            mockGetRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""handle"": ""yyyy"", ""rev"": 28, ""created"": false}"));
+            mockGetRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+            var mockSnapshotRequest = new Mock<IApiRequest>();
+            mockSnapshotRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""rows"": [{""tid"": ""test_objects"", ""data"": { ""NullableField"": 1.0, ""NullableProperty"": 2.0 },""rowid"": ""1""}], ""rev"": 28}"));
+            mockSnapshotRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));        
+
+            RequestFactory
+                .Setup(api => api.CreateRequest("POST", "get_or_create_datastore", Manager.ApiToken))
+                .Returns(mockGetRequest.Object);
+
+            RequestFactory
+                .Setup(api => api.CreateRequest("POST", "get_snapshot", Manager.ApiToken))
+                .Returns(mockSnapshotRequest.Object);
+
+            var db = Manager.GetOrCreate("default");
+            db.Pull();
+
+            var table = db.GetTable<NullableDoubleObject>("test_objects");
+            Assert.AreEqual(table.Count(), 1);
+
+            var item = table.Single();
+            Assert.AreEqual(item.NullableField, 1.0);
+            Assert.AreEqual(item.NullableProperty, 2.0);
+        }
+
+        [Test]
+        public void DeserializeAsNullWhenSourceTypeIsJsonFloatAndDestinationTypeIsNullableDouble()
+        {
+            var mockGetRequest = new Mock<IApiRequest>();
+            mockGetRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""handle"": ""yyyy"", ""rev"": 28, ""created"": false}"));
+            mockGetRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+            var mockSnapshotRequest = new Mock<IApiRequest>();
+            mockSnapshotRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""rows"": [{""tid"": ""test_objects"", ""data"": {  },""rowid"": ""1""}], ""rev"": 28}"));
+            mockSnapshotRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+            RequestFactory
+                .Setup(api => api.CreateRequest("POST", "get_or_create_datastore", Manager.ApiToken))
+                .Returns(mockGetRequest.Object);
+
+            RequestFactory
+                .Setup(api => api.CreateRequest("POST", "get_snapshot", Manager.ApiToken))
+                .Returns(mockSnapshotRequest.Object);
+
+            var db = Manager.GetOrCreate("default");
+            db.Pull();
+
+            var table = db.GetTable<NullableDoubleObject>("test_objects");
+            Assert.AreEqual(table.Count(), 1);
+
+            var item = table.Single();
+            Assert.AreEqual(item.NullableField, default(double?));
+            Assert.AreEqual(item.NullableProperty, default(double?));
+        }
+
+        public class NullableFloatObject
+        {
+            public string Id { get; set; }
+            public float? NullableField;
+            public float? NullableProperty { get; set; }            
+        }
+
+        [Test]
+        public void CanDeserializeJsonTypeFloatToTypeNullableFloat()
+        {
+            var mockGetRequest = new Mock<IApiRequest>();
+            mockGetRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""handle"": ""yyyy"", ""rev"": 28, ""created"": false}"));
+            mockGetRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+            var mockSnapshotRequest = new Mock<IApiRequest>();
+            mockSnapshotRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""rows"": [{""tid"": ""test_objects"", ""data"": { ""NullableField"": 1.0, ""NullableProperty"": 2.0 },""rowid"": ""1""}], ""rev"": 28}"));
+            mockSnapshotRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+            RequestFactory
+                .Setup(api => api.CreateRequest("POST", "get_or_create_datastore", Manager.ApiToken))
+                .Returns(mockGetRequest.Object);
+
+            RequestFactory
+                .Setup(api => api.CreateRequest("POST", "get_snapshot", Manager.ApiToken))
+                .Returns(mockSnapshotRequest.Object);
+
+            var db = Manager.GetOrCreate("default");
+            db.Pull();
+
+            var table = db.GetTable<NullableFloatObject>("test_objects");
+            Assert.AreEqual(table.Count(), 1);
+
+            var item = table.Single();
+            Assert.AreEqual(item.NullableField, 1.0);
+            Assert.AreEqual(item.NullableProperty, 2.0);
+        }
+
+        [Test]
+        public void DeserializeAsNullWhenSourceTypeIsJsonFloatAndDestinationTypeIsNullableFloat()
+        {
+            var mockGetRequest = new Mock<IApiRequest>();
+            mockGetRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""handle"": ""yyyy"", ""rev"": 28, ""created"": false}"));
+            mockGetRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+            var mockSnapshotRequest = new Mock<IApiRequest>();
+            mockSnapshotRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""rows"": [{""tid"": ""test_objects"", ""data"": {  },""rowid"": ""1""}], ""rev"": 28}"));
+            mockSnapshotRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+            RequestFactory
+                .Setup(api => api.CreateRequest("POST", "get_or_create_datastore", Manager.ApiToken))
+                .Returns(mockGetRequest.Object);
+
+            RequestFactory
+                .Setup(api => api.CreateRequest("POST", "get_snapshot", Manager.ApiToken))
+                .Returns(mockSnapshotRequest.Object);
+
+            var db = Manager.GetOrCreate("default");
+            db.Pull();
+
+            var table = db.GetTable<NullableFloatObject>("test_objects");
+            Assert.AreEqual(table.Count(), 1);
+
+            var item = table.Single();
+            Assert.AreEqual(item.NullableField, default(float?));
+            Assert.AreEqual(item.NullableProperty, default(float?));
+        }
+
+        public class NullableBoolObject
+        {
+            public string Id { get; set; }
+            public bool? NullableField;
+            public bool? NullableProperty { get; set; }
+        }
+
+        [Test]
+        public void CanDeserializeJsonTypeBooleanToTypeNullableBool()
+        {
+            var mockGetRequest = new Mock<IApiRequest>();
+            mockGetRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""handle"": ""yyyy"", ""rev"": 28, ""created"": false}"));
+            mockGetRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+            var mockSnapshotRequest = new Mock<IApiRequest>();
+            mockSnapshotRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""rows"": [{""tid"": ""test_objects"", ""data"": { ""NullableField"": true, ""NullableProperty"": false },""rowid"": ""1""}], ""rev"": 28}"));
+            mockSnapshotRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+            RequestFactory
+                .Setup(api => api.CreateRequest("POST", "get_or_create_datastore", Manager.ApiToken))
+                .Returns(mockGetRequest.Object);
+
+            RequestFactory
+                .Setup(api => api.CreateRequest("POST", "get_snapshot", Manager.ApiToken))
+                .Returns(mockSnapshotRequest.Object);
+
+            var db = Manager.GetOrCreate("default");
+            db.Pull();
+
+            var table = db.GetTable<NullableBoolObject>("test_objects");
+            Assert.AreEqual(table.Count(), 1);
+
+            var item = table.Single();
+            Assert.AreEqual(item.NullableField, true);
+            Assert.AreEqual(item.NullableProperty, false);
+        }
+
+        [Test]
+        public void DeserializeAsNullWhenSourceTypeIsJsonBooleanAndDestinationTypeIsNullableBool()
+        {
+            var mockGetRequest = new Mock<IApiRequest>();
+            mockGetRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""handle"": ""yyyy"", ""rev"": 28, ""created"": false}"));
+            mockGetRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+            var mockSnapshotRequest = new Mock<IApiRequest>();
+            mockSnapshotRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""rows"": [{""tid"": ""test_objects"", ""data"": {  },""rowid"": ""1""}], ""rev"": 28}"));
+            mockSnapshotRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+            RequestFactory
+                .Setup(api => api.CreateRequest("POST", "get_or_create_datastore", Manager.ApiToken))
+                .Returns(mockGetRequest.Object);
+
+            RequestFactory
+                .Setup(api => api.CreateRequest("POST", "get_snapshot", Manager.ApiToken))
+                .Returns(mockSnapshotRequest.Object);
+
+            var db = Manager.GetOrCreate("default");
+            db.Pull();
+
+            var table = db.GetTable<NullableBoolObject>("test_objects");
+            Assert.AreEqual(table.Count(), 1);
+
+            var item = table.Single();
+            Assert.AreEqual(item.NullableField, default(bool?));
+            Assert.AreEqual(item.NullableProperty, default(bool?));
+        }
+
+        public class NullableDateTimeObject
+        {
+            public string Id { get; set; }
+            public DateTime? NullableField;
+            public DateTime? NullableProperty { get; set; }
+        }
+
+        [Test]
+        public void CanDeserializeTimeStampToTypeNullableDateTime()
+        {
+            var mockGetRequest = new Mock<IApiRequest>();
+            mockGetRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""handle"": ""yyyy"", ""rev"": 28, ""created"": false}"));
+            mockGetRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+            var mockSnapshotRequest = new Mock<IApiRequest>();
+            mockSnapshotRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""rows"": [{""tid"": ""test_objects"", ""data"": { ""NullableField"": {""T"": ""486086400000""} , ""NullableProperty"": {""T"": ""486086400000""}  },""rowid"": ""1""}], ""rev"": 28}"));
+            mockSnapshotRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+            RequestFactory
+                .Setup(api => api.CreateRequest("POST", "get_or_create_datastore", Manager.ApiToken))
+                .Returns(mockGetRequest.Object);
+
+            RequestFactory
+                .Setup(api => api.CreateRequest("POST", "get_snapshot", Manager.ApiToken))
+                .Returns(mockSnapshotRequest.Object);
+
+            var db = Manager.GetOrCreate("default");
+            db.Pull();
+
+            var table = db.GetTable<NullableDateTimeObject>("test_objects");
+            Assert.AreEqual(table.Count(), 1);
+
+            var item = table.Single();
+            Assert.AreEqual(item.NullableField, new DateTime(1985, 5, 28, 0, 0, 0, 0));
+            Assert.AreEqual(item.NullableProperty, new DateTime(1985, 5, 28, 0, 0, 0, 0));
+        }
+
+        [Test]
+        public void DeserializeAsNullWhenSourceTypeIsTimeStampAndDestinationTypeIsNullableDateTime()
+        {
+            var mockGetRequest = new Mock<IApiRequest>();
+            mockGetRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""handle"": ""yyyy"", ""rev"": 28, ""created"": false}"));
+            mockGetRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+            var mockSnapshotRequest = new Mock<IApiRequest>();
+            mockSnapshotRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""rows"": [{""tid"": ""test_objects"", ""data"": { },""rowid"": ""1""}], ""rev"": 28}"));
+            mockSnapshotRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+            RequestFactory
+                .Setup(api => api.CreateRequest("POST", "get_or_create_datastore", Manager.ApiToken))
+                .Returns(mockGetRequest.Object);
+
+            RequestFactory
+                .Setup(api => api.CreateRequest("POST", "get_snapshot", Manager.ApiToken))
+                .Returns(mockSnapshotRequest.Object);
+
+            var db = Manager.GetOrCreate("default");
+            db.Pull();
+
+            var table = db.GetTable<NullableDateTimeObject>("test_objects");
+            Assert.AreEqual(table.Count(), 1);
+
+            var item = table.Single();
+            Assert.AreEqual(item.NullableField, default(DateTime?));
+            Assert.AreEqual(item.NullableProperty, default(DateTime?));
+        }
 	}
 }
