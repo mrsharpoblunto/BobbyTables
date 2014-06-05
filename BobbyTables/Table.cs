@@ -802,8 +802,11 @@ namespace BobbyTables
 		{
 			if (value.Type == JTokenType.Boolean)
 			{
-				if (type != typeof(bool)) throw new ArgumentException("Unable to deserialize JSON type " + value.Type + " to type " + type);
-				return value.Value<bool>();
+                if (type == typeof(bool) || type == typeof(bool?))
+                {
+                    return value.Value<bool>();
+                }
+                throw new ArgumentException("Unable to deserialize JSON type " + value.Type + " to type " + type);
 			}
 			else if (value.Type == JTokenType.String)
 			{
@@ -812,11 +815,11 @@ namespace BobbyTables
 			}
 			else if (value.Type == JTokenType.Float || value.Type == JTokenType.Integer)
 			{
-				if (type == typeof(float))
+                if (type == typeof(float) || type == typeof(float?))
 				{
 					return value.Value<float>();
 				}
-				else if (type == typeof(double))
+                else if (type == typeof(double) || type == typeof(double?))
 				{
 					return value.Value<double>();
 				}
@@ -842,10 +845,6 @@ namespace BobbyTables
 					else if (type == typeof(UInt16) || type == typeof(UInt16?))
 					{
 						return value["I"].Value<UInt16>();
-					}
-					else if (type == typeof(int))
-					{
-						return value["I"].Value<int>();
 					}
 					else if (type == typeof(uint) || type == typeof(uint?))
 					{
