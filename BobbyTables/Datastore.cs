@@ -334,7 +334,9 @@ namespace BobbyTables
 
 			foreach (var delta in deltas)
 			{
-				Rev = delta["rev"].Value<int>();
+				var rev = delta["rev"].Value<int>();
+				if (rev < Rev) continue;
+				Rev = rev + 1;
 				var changes = delta["changes"] as JArray;
 				foreach (JArray change in changes)
 				{
