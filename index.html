@@ -140,6 +140,12 @@
 
 </pre></div>
 
+<h4><a name="Storing dynamic objects/dictionaries" class="anchor" href="#storing-dynamic-objects-dictionaries">
+<span class="octicon octicon-link"></span>	
+</a>Storing dynamic objects/dictionaries</h4>
+
+<p>If you don't want to store strongly typed objects and instead would rather store objects containing a dictionary of key/value pairs you can do so by ensuring your stored objects inherit from the IDictionary interface. Note that the .NET 4+ ExpandoObject already implements this interface, so storing dynamic ExpandoObjects is fully supported.</p>
+
 <h4>
 <a name="retrieving-and-updating-existing-data" class="anchor" href="#retrieving-and-updating-existing-data"><span class="octicon octicon-link"></span></a>Retrieving and updating existing data</h4>
 
