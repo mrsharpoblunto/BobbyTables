@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -1523,5 +1524,70 @@ namespace BobbyTables.Tests
             Assert.AreEqual(item.NullableField, default(DateTime?));
             Assert.AreEqual(item.NullableProperty, default(DateTime?));
         }
+
+		[Test]
+		public void InsertUpdateGetDynamicObjects()
+		{
+			var mockGetRequest = new Mock<IApiRequest>();
+			mockGetRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""handle"": ""yyyy"", ""rev"": 1, ""created"": false}"));
+			mockGetRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+			var mockSnapshotRequest = new Mock<IApiRequest>();
+			mockSnapshotRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""rows"": [], ""rev"": 1}"));
+			mockSnapshotRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+			var mockPushRequest = new Mock<IApiRequest>();
+			mockPushRequest.Setup(req => req.GetResponse()).Returns(new ApiResponse(200, @"{""rev"": 2}"));
+			mockPushRequest.Setup(req => req.AddParam(It.IsAny<string>(), It.IsAny<string>()));
+
+			RequestFactory
+				.Setup(api => api.CreateRequest("POST", "get_or_create_datastore", Manager.ApiToken))
+				.Returns(mockGetRequest.Object);
+
+			RequestFactory
+				.Setup(api => api.CreateRequest("POST", "get_snapshot", Manager.ApiToken))
+				.Returns(mockSnapshotRequest.Object);
+
+			RequestFactory
+				.Setup(api => api.CreateRequest("POST", "put_delta", Manager.ApiToken))
+				.Returns(mockPushRequest.Object);
+
+			var db = Manager.GetOrCreate("default");
+			db.Pull();
+			var table = db.GetTable<ExpandoObject>("test_objects");
+
+			dynamic obj = new ExpandoObject();
+			obj.Description = "hello";
+
+			Assert.IsTrue(table.Insert(obj));
+
+			// after insertion the id has been set
+			Assert.IsFalse(string.IsNullOrEmpty(obj.Id));
+
+			Assert.IsTrue(db.Push());
+
+			dynamic newObj = table.Get(obj.Id);
+			Assert.AreEqual(obj.Description, newObj.Description);
+
+			newObj.Description = "hello world!";
+			Assert.IsTrue(table.Update(newObj));
+
+			string expectedRequest = (@"[
+  [
+    ""I"",
+    ""test_objects"",
+    """ + obj.Id + @""",
+    {
+      ""Description"": ""hello"",
+      ""Id"": """ + obj.Id + @"""
+    }
+  ]
+]").Replace(" ", string.Empty).Replace("\r\n", string.Empty);
+
+			// check that we pushed the correct values to dropbox
+			mockPushRequest.Verify(req => req.AddParam("handle", "yyyy"), Times.Exactly(1));
+			mockPushRequest.Verify(req => req.AddParam("rev", "1"), Times.Exactly(1));
+			mockPushRequest.Verify(req => req.AddParam("changes", expectedRequest), Times.Exactly(1));
+		}
 	}
 }

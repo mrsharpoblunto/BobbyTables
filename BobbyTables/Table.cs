@@ -255,29 +255,46 @@ namespace BobbyTables
 			change.Add(Id);
 			change.Add(id);
 			JObject data = new JObject();
-			foreach (var field in insert.GetType().GetFields())
+
+			if (insert is IDictionary<string, object>)
 			{
-				if (field.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0) 
+				var dict = (insert as IDictionary<string, object>);
+				foreach (var field in dict)
 				{
-					object fieldValue = field.GetValue(insert);
+					object fieldValue = field.Value;
 					if (fieldValue != null)
 					{
-						data[field.Name] = SerializeValue(fieldValue);
+						data[field.Key] = SerializeValue(fieldValue);
 					}
 				}
-			}
-			foreach (var prop in insert.GetType().GetProperties())
+			} 
+			else 
 			{
-				if (prop.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0)
+				foreach (var field in insert.GetType().GetFields())
 				{
-					object propValue = prop.GetValue(insert, null);
-					// we are only interested in read/writable fields
-					if (prop.CanRead && prop.CanWrite && propValue != null)
+					if (field.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0) 
 					{
-						data[prop.Name] = SerializeValue(propValue);
+						object fieldValue = field.GetValue(insert);
+						if (fieldValue != null)
+						{
+							data[field.Name] = SerializeValue(fieldValue);
+						}
+					}
+				}
+				foreach (var prop in insert.GetType().GetProperties())
+				{
+					if (prop.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0)
+					{
+						object propValue = prop.GetValue(insert, null);
+						// we are only interested in read/writable fields
+						if (prop.CanRead && prop.CanWrite && propValue != null)
+						{
+							data[prop.Name] = SerializeValue(propValue);
+						}
 					}
 				}
 			}
+
 			change.Add(data);
 
 			_pendingChanges.Add(change);
@@ -314,26 +331,48 @@ namespace BobbyTables
 				T obj = new T();
 				idSetter( obj, id);
 
-				foreach (var field in obj.GetType().GetFields())
+				if (obj is IDictionary<string, object>)
 				{
-					if (field.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0)
+					var dict = (obj as IDictionary<string, object>);
+					foreach (var field in row.Data)
 					{
-						var data = row.Data[field.Name];
+						var data = field.Value;
 						if (data != null)
 						{
-							field.SetValue(obj, DeserializeValue(data, field.FieldType));
+							if (dict.ContainsKey(field.Key))
+							{
+								dict[field.Key] = DeserializeValue(data);
+							}
+							else
+							{
+								dict.Add(field.Key, DeserializeValue(data));
+							}
 						}
 					}
 				}
-				foreach (var prop in obj.GetType().GetProperties())
+				else
 				{
-					// we are only interested in read/writable fields
-					if (prop.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0 && prop.CanRead && prop.CanWrite)
+					foreach (var field in obj.GetType().GetFields())
 					{
-						var data = row.Data[prop.Name];
-						if (data != null)
+						if (field.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0)
 						{
-							prop.SetValue(obj, DeserializeValue(data, prop.PropertyType), null);
+							var data = row.Data[field.Name];
+							if (data != null)
+							{
+								field.SetValue(obj, DeserializeValue(data, field.FieldType));
+							}
+						}
+					}
+					foreach (var prop in obj.GetType().GetProperties())
+					{
+						// we are only interested in read/writable fields
+						if (prop.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0 && prop.CanRead && prop.CanWrite)
+						{
+							var data = row.Data[prop.Name];
+							if (data != null)
+							{
+								prop.SetValue(obj, DeserializeValue(data, prop.PropertyType), null);
+							}
 						}
 					}
 				}
@@ -374,26 +413,41 @@ namespace BobbyTables
 				change.Add(id);
 				change.Add(new JObject());
 
-				foreach (var field in update.GetType().GetFields())
+
+				if (update is IDictionary<string, object>)
 				{
-					if (field.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0)
+					var dict = (update as IDictionary<string, object>);
+					foreach (var field in dict)
 					{
-						object fieldValue = field.GetValue(update);
+						object fieldValue = field.Value;
 						JToken value = fieldValue != null ? SerializeValue(fieldValue) : null;
-						var operations = DetermineOperations(row.Data, field.Name, value);
-						change = AddPendingOperations(field.Name, value, operations, change);
-					}                
+						var operations = DetermineOperations(row.Data, field.Key, value);
+						change = AddPendingOperations(field.Key, value, operations, change);
+					}
 				}
-				foreach (var prop in update.GetType().GetProperties())
+				else
 				{
-					// we are only interested in read/writable fields
-					if (prop.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0 && prop.CanRead && prop.CanWrite)
+					foreach (var field in update.GetType().GetFields())
 					{
-						object propValue = prop.GetValue(update, null);
-						var value = propValue != null ? SerializeValue(propValue) : null;
-						var operations = DetermineOperations(row.Data, prop.Name, value);
-						change = AddPendingOperations(prop.Name, value, operations, change);
-					}                  
+						if (field.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0)
+						{
+							object fieldValue = field.GetValue(update);
+							JToken value = fieldValue != null ? SerializeValue(fieldValue) : null;
+							var operations = DetermineOperations(row.Data, field.Name, value);
+							change = AddPendingOperations(field.Name, value, operations, change);
+						}
+					}
+					foreach (var prop in update.GetType().GetProperties())
+					{
+						// we are only interested in read/writable fields
+						if (prop.GetCustomAttributes(typeof(IgnoreAttribute), true).Length == 0 && prop.CanRead && prop.CanWrite)
+						{
+							object propValue = prop.GetValue(update, null);
+							var value = propValue != null ? SerializeValue(propValue) : null;
+							var operations = DetermineOperations(row.Data, prop.Name, value);
+							change = AddPendingOperations(prop.Name, value, operations, change);
+						}
+					}
 				}
 
 				if (change.Last.HasValues)
@@ -923,6 +977,53 @@ namespace BobbyTables
 			throw new ArgumentException("Unable to deserialize JSON type " + value.Type);
 		}
 
+		private static object DeserializeValue(JToken value)
+		{
+			if (value.Type == JTokenType.Boolean)
+			{
+				return value.Value<bool>();
+			}
+			else if (value.Type == JTokenType.String)
+			{
+				return value.Value<string>();
+			}
+			else if (value.Type == JTokenType.Float || value.Type == JTokenType.Integer)
+			{		
+				return value.Value<double>();
+			}
+			else if (value.Type == JTokenType.Object)
+			{
+				if (value["I"] != null)
+				{
+					//Integer values
+					return value["I"].Value<int>();
+				}
+				else if (value["T"] != null)
+				{
+					//DateTime values
+					return (new DateTime(1970, 1, 1)).AddMilliseconds(value["T"].Value<Int64>());
+				}
+				else if (value["B"] != null)
+				{	
+					return Utils.FromDBase64(value["B"].Value<string>());
+				}
+			}
+			else if (value.Type == JTokenType.Array)
+			{
+				JArray array = value as JArray;
+				// we could possibly infer the type of the array based on the type of the 
+				// first element we deserialized, but then the array type would change if the
+				// array ever became empty - to make things more predictable we'll just always
+				// make the array of type object.
+				object[] typedArray = new object[array.Count];
+				for (int i = 0; i < array.Count; ++i)
+				{
+					typedArray[i] = DeserializeValue(array[i]);
+				}
+				return typedArray;
+			}
+			throw new ArgumentException("Unable to deserialize JSON type " + value.Type);
+		}
 		#endregion
 	}
 
@@ -1054,12 +1155,28 @@ namespace BobbyTables
 			{
 				return fieldInfo.GetValue(update) as string;
 			}
-			else
+
+			PropertyInfo propInfo = update.GetType().GetProperty("Id");
+			if (propInfo != null && propInfo.PropertyType == typeof(string) && propInfo.CanRead && propInfo.CanWrite)
 			{
-				PropertyInfo propInfo = update.GetType().GetProperty("Id");
-				if (propInfo != null && propInfo.PropertyType == typeof(string) && propInfo.CanRead && propInfo.CanWrite)
+				return propInfo.GetValue(update, null) as string;
+			}
+
+			if (update is IDictionary<string, object>)
+			{
+				var dict = update as IDictionary<string, object>;
+				if (dict.ContainsKey("Id"))
 				{
-					return propInfo.GetValue(update, null) as string;
+					object value = dict["Id"];
+					if (value is string)
+					{
+						return value as string;
+					}
+				}
+				else
+				{
+					dict.Add("Id", string.Empty);
+					return string.Empty;
 				}
 			}
 
@@ -1074,14 +1191,26 @@ namespace BobbyTables
 				fieldInfo.SetValue(update, id);
 				return;
 			}
-			else
+
+			PropertyInfo propInfo = update.GetType().GetProperty("Id");
+			if (propInfo != null && propInfo.PropertyType == typeof(string) && propInfo.CanRead && propInfo.CanWrite)
 			{
-				PropertyInfo propInfo = update.GetType().GetProperty("Id");
-				if (propInfo != null && propInfo.PropertyType == typeof(string) && propInfo.CanRead && propInfo.CanWrite)
+				propInfo.SetValue(update, id, null);
+				return;
+			}
+
+			if (update is IDictionary<string, object>)
+			{
+				var dict = update as IDictionary<string,object>;
+				if (dict.ContainsKey("Id"))
 				{
-					propInfo.SetValue(update, id, null);
-					return;
+					dict["Id"] = id;
 				}
+				else
+				{
+					dict.Add("Id", id);
+				}
+				return;
 			}
 
 			throw new ArgumentException("Object does not have a public string Id field or property");
