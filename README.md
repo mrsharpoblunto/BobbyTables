@@ -104,7 +104,7 @@ if (await datastore.PushAsync()) {
 ```
 
 #### Storing dynamic objects/dictionaries
-If you don't want to store strongly typed objects and instead would rather store objects containing a dictionary of key/value pairs you can do so by ensuring your stored objects inherit from the IDictionary<string,object> interface. Note that the .NET 4+ ExpandoObject already implements this interface, so storing dynamic ExpandoObjects is fully supported.
+If you don't want to store strongly typed objects and instead would rather store objects containing a dictionary of key/value pairs you can do so by ensuring your stored objects inherit from the IDictionary&lt;string,object&gt; interface. Note that the .NET 4+ ExpandoObject already implements this interface, so storing dynamic ExpandoObjects is fully supported.
 
 #### Retrieving and updating existing data
 ```c#
