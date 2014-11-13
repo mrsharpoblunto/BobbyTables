@@ -540,7 +540,7 @@ namespace BobbyTables
 						JArray update = value as JArray;
 
 						// get the longest common subsequence between the two lists
-						JArray lcs = ComputeLCS(original, update);
+						JArray lcs = Utils.ComputeLCS(original, update,SerializedValuesEqual);
 
 						int lcsIndex = 0;
 						//anything present in the update but not in the LCS is a new addition
@@ -613,54 +613,6 @@ namespace BobbyTables
 				operations.Add(op);
 			}
 			return operations;
-		}
-
-		private static JArray ComputeLCS(JArray a,JArray b)
-		{
-			var sequence = new JArray();
-			if (a.Count==0 || b.Count==0)
-				return sequence;
-
-			int[,] num = new int[a.Count, b.Count];
-			int maxlen = 0;
-			int lastSubsBegin = 0;
-
-			for (int i = 0; i < a.Count; i++)
-			{
-				for (int j = 0; j < b.Count; j++)
-				{
-					if (!SerializedValuesEqual(a[i], b[j]))
-					{
-						num[i, j] = 0;
-					}
-					else
-					{
-						if ((i == 0) || (j == 0))
-							num[i, j] = 1;
-						else
-							num[i, j] = 1 + num[i - 1, j - 1];
-
-						if (num[i, j] > maxlen)
-						{
-							maxlen = num[i, j];
-							int thisSubsBegin = i - num[i, j] + 1;
-							if (lastSubsBegin == thisSubsBegin)
-							{
-								sequence.Add(a[i]);
-							}
-							else
-							{
-								lastSubsBegin = thisSubsBegin;
-								sequence.Clear();
-								for (int k=0;k<(i+1)-lastSubsBegin;++k) {
-									sequence.Add(a[lastSubsBegin+k]);
-								}
-							}
-						}
-					}
-				}
-			}
-			return sequence;
 		}
 
 		private static string GetObjectId(object update,IdGetter idGetter, IdSetter idSetter)

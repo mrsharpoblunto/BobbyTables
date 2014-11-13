@@ -53,6 +53,7 @@
   <ItemGroup>
     <Compile Include="DatastoreManagerTests.cs" />
     <Compile Include="DatastoreTests.cs" />
+    <Compile Include="LCSTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -64,7 +65,7 @@
       <Name>BobbyTables.net45</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />  
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

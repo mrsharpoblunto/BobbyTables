@@ -541,12 +541,6 @@ namespace BobbyTables.Tests
         ""ByteArray"": [""P"", {
             ""B"": ""_wEA_w""
         }],
-        ""StringList"": [""LI"", 2, ""world""]
-    }],
-    [""U"", ""test_objects"", ""1"", {
-        ""StringList"": [""LD"", 1]
-    }],
-    [""U"", ""test_objects"", ""1"", {
         ""StringList"": [""LI"", 1, ""there""],
         ""IntList"": [""LI"", 3, {
             ""I"": ""5""
